@@ -123,3 +123,74 @@ class QM9DataModule(pl.LightningDataModule):
             shuffle=False,
             pin_memory=True,
         )
+
+
+class TestDataModule(pl.LightningDataModule):
+    def __init__(
+        self,
+        target: int = 0,
+        data_dir: str = "data/",
+        batch_size_train: int = 32,
+        batch_size_inference: int = 32,
+        num_workers: int = 0,
+        splits: Union[List[int], List[float]] = [0.8, 0.1, 0.1],
+        seed: int = 0,
+        subset_size: Optional[int] = None,
+    ) -> None:
+        super().__init__()
+        self.target = target
+        self.data_dir = data_dir
+        self.batch_size_train = batch_size_train
+        self.batch_size_inference = batch_size_inference
+        self.num_workers = num_workers
+        self.splits = splits
+        self.seed = seed
+        self.subset_size = subset_size
+
+        self.data_train = None
+        self.data_val = None
+        self.data_test = None
+        
+    def setup(self, stage: Optional[str] = None) -> None:
+        rng = np.random.default_rng(seed=self.seed)
+        dataset = dataset[rng.permutation(len(dataset))]
+        
+        if self.subset_size is not None:
+            dataset = dataset[: self.subset_size]
+            
+        if all([type(split) == int for split in self.splits]):
+            split_sizes = self.splits
+        elif all([type(split) == float for split in self.splits]):
+            split_sizes = [int(len(dataset) * prop) for prop in self.splits]
+
+        split_idx = np.cumsum(split_sizes)
+        self.data_train = dataset[: split_idx[0]]
+        self.data_val = dataset[split_idx[0] : split_idx[1]]
+        self.data_test = dataset[split_idx[1] :]
+    
+    def train_dataloader(self, shuffle=True) -> DataLoader:
+        return DataLoader(
+            self.data_train,
+            batch_size=self.batch_size_train,
+            num_workers=self.num_workers,
+            shuffle=shuffle,
+            pin_memory=True,
+        )
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.data_val,
+            batch_size=self.batch_size_inference,
+            num_workers=self.num_workers,
+            shuffle=False,
+            pin_memory=True,
+        )
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.data_test,
+            batch_size=self.batch_size_inference,
+            num_workers=self.num_workers,
+            shuffle=False,
+            pin_memory=True,
+        )
