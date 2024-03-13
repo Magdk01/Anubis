@@ -2,7 +2,7 @@ import hydra
 from pytorch_lightning import Trainer, callbacks, loggers, seed_everything
 from scaling_model.models.utils import PredictionWriter
 from scaling_model.models.painn_lightning import PaiNNforQM9
-from scaling_model.data.data_module import QM9DataModule
+from scaling_model.data.data_module import QM9DataModule, TestDataModule
 
 
 @hydra.main(
@@ -21,7 +21,7 @@ def main(cfg):
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
-    dm = QM9DataModule(**cfg.data)
+    dm = TestDataModule(**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(callbacks=cb, **cfg.trainer)
     trainer.fit(model, datamodule=dm)

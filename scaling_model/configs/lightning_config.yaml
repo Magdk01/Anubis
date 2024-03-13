@@ -4,10 +4,10 @@ experiment: painn_qm9
 data:
   target: 0
   data_dir: data/
-  batch_size_train: 100
-  batch_size_inference: 100
+  batch_size_train: 1
+  batch_size_inference: 1
   num_workers: 0
-  splits: [110000, 10000, 10831]
+  splits: [5, 2, 2]
   seed: ${seed}
   subset_size: null
 

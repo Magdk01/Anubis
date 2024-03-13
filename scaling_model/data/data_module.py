@@ -7,6 +7,8 @@ from typing import Optional, List, Union
 from torch_geometric.loader import DataLoader
 from torch_geometric.transforms import BaseTransform
 
+from scaling_model.data.utils import TestData
+
 
 class GetTarget(BaseTransform):
     def __init__(self, target: Optional[int] = None) -> None:
@@ -33,7 +35,7 @@ class QM9DataModule(pl.LightningDataModule):
     def __init__(
         self,
         target: int = 0,
-        data_dir: str = "data/",
+        data_dir: str = "qm9_data/",
         batch_size_train: int = 32,
         batch_size_inference: int = 32,
         num_workers: int = 0,
@@ -126,6 +128,9 @@ class QM9DataModule(pl.LightningDataModule):
 
 
 class TestDataModule(pl.LightningDataModule):
+
+    target_types = ["atomwise" for _ in range(5)]
+
     def __init__(
         self,
         target: int = 0,
@@ -136,6 +141,7 @@ class TestDataModule(pl.LightningDataModule):
         splits: Union[List[int], List[float]] = [0.8, 0.1, 0.1],
         seed: int = 0,
         subset_size: Optional[int] = None,
+        download: Optional[bool] = False,
     ) -> None:
         super().__init__()
         self.target = target
@@ -146,18 +152,29 @@ class TestDataModule(pl.LightningDataModule):
         self.splits = splits
         self.seed = seed
         self.subset_size = subset_size
+        self.download = download
 
         self.data_train = None
         self.data_val = None
         self.data_test = None
-        
+
+    def prepare_data(self) -> None:
+        if self.download:
+            TestData(self.data_dir)
+
     def setup(self, stage: Optional[str] = None) -> None:
+
+        dataset = TestData(self.data_dir)
+
+        # Shuffle dataset
         rng = np.random.default_rng(seed=self.seed)
         dataset = dataset[rng.permutation(len(dataset))]
-        
+
+        # Subset dataset
         if self.subset_size is not None:
             dataset = dataset[: self.subset_size]
-            
+
+        # Split dataset
         if all([type(split) == int for split in self.splits]):
             split_sizes = self.splits
         elif all([type(split) == float for split in self.splits]):
@@ -167,7 +184,23 @@ class TestDataModule(pl.LightningDataModule):
         self.data_train = dataset[: split_idx[0]]
         self.data_val = dataset[split_idx[0] : split_idx[1]]
         self.data_test = dataset[split_idx[1] :]
-    
+
+    def get_target_stats(self, remove_atom_refs=False, divide_by_atoms=False):
+        atom_refs = self.data_train.atomref(self.target)
+
+        ys = list()
+        for batch in self.train_dataloader(shuffle=False):
+            y = batch.y.clone()
+            if remove_atom_refs and atom_refs is not None:
+                y.index_add_(dim=0, index=batch.batch, source=-atom_refs[batch.z])
+            if divide_by_atoms:
+                _, num_atoms = torch.unique(batch.batch, return_counts=True)
+                y = y / num_atoms.unsqueeze(-1)
+            ys.append(y)
+
+        y = torch.cat(ys, dim=0)
+        return y.mean(), y.std(), atom_refs
+
     def train_dataloader(self, shuffle=True) -> DataLoader:
         return DataLoader(
             self.data_train,
