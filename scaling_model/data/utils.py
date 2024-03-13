@@ -146,19 +146,19 @@ class TestData(InMemoryDataset):
         data_list = list()
         for j, row in df.iterrows():
             name = row["pdb"]
-            y = torch.Tensor(
+            y = torch.tensor(
                 [row["gravy"], row["mw"], row["pI"], row["II"], row["aromaticity"]]
             )
-            x = torch.Tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
+            x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
 
             n_atoms = len(row["coords"])
             z = torch.empty((n_atoms), dtype=torch.long)
             pos = torch.empty((n_atoms, 3))
             for i, x in enumerate(row["coords"]):
-                z[i] = torch.Tensor(
-                    [int(element_translation[x[0].lower()])], dtype=torch.long
-                )
-                pos[i] = torch.Tensor([x[1], x[2], x[3]])
+                z[i] = torch.tensor(
+                    int(element_translation[x[0].lower()]), dtype=torch.long
+                ).view(-1, 1)
+                pos[i] = torch.tensor([x[1], x[2], x[3]])
 
             data = Data(x=x, z=z, pos=pos, y=y, name=name, idx=j)
             data_list.append(data)
