@@ -2,12 +2,12 @@ seed: 0
 experiment: painn_qm9
 
 data:
-  target: 0
+  target: 1
   data_dir: data/
   batch_size_train: 1
   batch_size_inference: 1
-  num_workers: 0
-  splits: [5, 2, 2]
+  num_workers: 11
+  splits: [12, 2, 2]
   seed: ${seed}
   subset_size: null
 
@@ -47,7 +47,7 @@ model_checkpoint:
     mode: min
 
 trainer:
-  max_epochs: 100000
+  max_epochs: 3
   max_time: 00:23:30:00
   deterministic: true
 
