@@ -164,7 +164,7 @@ class TestDataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
 
-        dataset = TestData(self.data_dir)
+        dataset = TestData(root=self.data_dir, transform=GetTarget(self.target))
 
         # Shuffle dataset
         rng = np.random.default_rng(seed=self.seed)

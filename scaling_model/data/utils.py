@@ -160,7 +160,7 @@ class TestData(InMemoryDataset):
                 ).view(-1, 1)
                 pos[i] = torch.tensor([x[1], x[2], x[3]])
 
-            data = Data(x=x, z=z, pos=pos, y=y, name=name, idx=j)
+            data = Data(x=x, z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=j)
             data_list.append(data)
 
         self.save(data_list, self.processed_paths[0])
