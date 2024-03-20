@@ -11,7 +11,6 @@ from scaling_model.data.data_module import QM9DataModule, TestDataModule
     version_base=None,
 )
 def main(cfg):
-    print(cfg)
     seed_everything(cfg.seed)
     # logger = loggers.TensorBoardLogger(**cfg.logger)
     # logger.log_hyperparams(cfg, {"hp/val_loss": float("inf")})
