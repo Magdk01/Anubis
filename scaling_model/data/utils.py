@@ -11,12 +11,16 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from biopandas.pdb import PandasPdb
 from periodictable import elements
 
-
 def get_atomic_structure(pdb_id):
-    ppdb = PandasPdb().fetch_pdb(pdb_id)
-    atom = ppdb.df["ATOM"]
-    structure = list(zip(atom.element_symbol, atom.x_coord, atom.y_coord, atom.z_coord))
-    return structure
+        try:
+            ppdb =PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
+            # ppdb = PandasPdb().fetch_pdb(pdb_id)
+            atom = ppdb.df['ATOM']
+            structure = list(zip(atom.element_symbol,atom.x_coord,atom.y_coord,atom.z_coord))
+            return structure
+        except:
+            print(pdb_id)
+            return None
 
 
 def get_prot_analysis(sequence):
@@ -69,92 +73,107 @@ class TestData(InMemoryDataset):
         return None
 
     def download(self) -> None:
-        requestURL = "https://www.ebi.ac.uk/proteins/api/proteins?offset=0&size=100&reviewed=true&isoform=0"
+        # requestURL = "https://www.ebi.ac.uk/proteins/api/proteins?offset=0&size=100&reviewed=true&isoform=0"
 
-        r = requests.get(requestURL, headers={"Accept": "application/xml"})
+        # r = requests.get(requestURL, headers={"Accept": "application/xml"})
 
-        if not r.ok:
-            r.raise_for_status()
-            sys.exit()
+        # if not r.ok:
+        #     r.raise_for_status()
+        #     sys.exit()
 
-        responseBody = r.text
+        # responseBody = r.text
 
-        file_path = os.path.join(self.data_path, "output.xml")
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(responseBody)
+        # file_path = os.path.join(self.data_path, "output.xml")
+        # with open(file_path, "w", encoding="utf-8") as file:
+        #     file.write(responseBody)
+        pass
+
+
+    
 
     def process(self):
-        file_path = os.path.join(self.data_path, "output.xml")
-        with open(file_path, "r", encoding="utf-8") as file:
-            xml_data_str = file.read()
+        
+        
+        # file_path = os.path.join(self.data_path, "output.xml")
+        # with open(file_path, "r", encoding="utf-8") as file:
+        #     xml_data_str = file.read()
 
-        xml_data_bytes = xml_data_str.encode("utf-8")
-        root = etree.fromstring(xml_data_bytes)
+        # xml_data_bytes = xml_data_str.encode("utf-8")
+        # root = etree.fromstring(xml_data_bytes)
 
-        namespaces = {
-            "uniprot": "http://uniprot.org/uniprot",
-            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        }
+        # namespaces = {
+        #     "uniprot": "http://uniprot.org/uniprot",
+        #     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+        # }
 
-        df = pd.DataFrame(
-            columns=[
-                "pdb",
-                "accession",
-                "name",
-                "sequence",
-                "coords",
-                "mw",
-                "pI",
-                "II",
-                "aromaticity",
-                "gravy",
-            ]
-        )
+        # df = pd.DataFrame(
+        #     columns=[
+        #         "pdb",
+        #         "accession",
+        #         "name",
+        #         "sequence",
+        #         "coords",
+        #         "mw",
+        #         "pI",
+        #         "II",
+        #         "aromaticity",
+        #         "gravy",
+        #     ]
+        # )
 
-        for entry in root.findall("uniprot:entry", namespaces):
-            sequence = entry.find("uniprot:sequence", namespaces).text
-            # print(sequence)
-            accession = entry.find("uniprot:accession", namespaces).text
-            # print(f"Accession: {accession}")
-            name = entry.find("uniprot:name", namespaces).text
-            # print(f"Name: {name}")
-            pdb_ids = entry.findall(".//uniprot:dbReference[@type='PDB']", namespaces)
-            for pdb_id in pdb_ids:
-                # print(f"PDB ID: {pdb_id.get('id')}")
-                df.loc[len(df.index)] = [
-                    pdb_id.get("id"),
-                    accession,
-                    name,
-                    sequence,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                ]
-        df = df.drop_duplicates()
+        # for entry in root.findall("uniprot:entry", namespaces):
+        #     sequence = entry.find("uniprot:sequence", namespaces).text
+        #     # print(sequence)
+        #     accession = entry.find("uniprot:accession", namespaces).text
+        #     # print(f"Accession: {accession}")
+        #     name = entry.find("uniprot:name", namespaces).text
+        #     # print(f"Name: {name}")
+        #     pdb_ids = entry.findall(".//uniprot:dbReference[@type='PDB']", namespaces)
+        #     for pdb_id in pdb_ids:
+        #         # print(f"PDB ID: {pdb_id.get('id')}")
+        #         df.loc[len(df.index)] = [
+        #             pdb_id.get("id"),
+        #             accession,
+        #             name,
+        #             sequence,
+        #             None,
+        #             None,
+        #             None,
+        #             None,
+        #             None,
+        #             None,
+        #         ]
+        # df = df.drop_duplicates()
 
-        for _, row in df.iterrows():
-            pdb_id = row.pdb
-            row["coords"] = get_atomic_structure(row.pdb)
-            row["mw"], row["pI"], row["II"], row["aromaticity"], row["gravy"] = (
-                get_prot_analysis(row.sequence)
-            )
+        # for _, row in df.iterrows():
+        #     pdb_id = row.pdb
+        #     row["coords"] = get_atomic_structure(row.pdb)
+        #     row["mw"], row["pI"], row["II"], row["aromaticity"], row["gravy"] = (
+        #         get_prot_analysis(row.sequence)
+        #     )
+
+        df = pd.read_excel('data/raw/MonomericProteinsWithFeatures.xlsx')
+
+
         element_translation = {el.symbol.lower(): el.number for el in elements}
-
+        element_translation['d'] = 1
         data_list = list()
         for j, row in df.iterrows():
-            name = row["pdb"]
+            pdb_id = row.PDB
+            coords = get_atomic_structure(pdb_id)
+            if coords == None:
+                continue
+
+            name = row["PDB"]
             y = torch.tensor(
-                [row["gravy"], row["mw"], row["pI"], row["II"], row["aromaticity"]]
+                [row["Alpha"], row["Beta"]]
             )
             x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
 
-            n_atoms = len(row["coords"])
+            n_atoms = len(coords)
             z = torch.empty((n_atoms), dtype=torch.long)
             pos = torch.empty((n_atoms, 3))
-            for i, x in enumerate(row["coords"]):
+            for i, x in enumerate(coords):
                 z[i] = torch.tensor(
                     int(element_translation[x[0].lower()]), dtype=torch.long
                 ).view(-1, 1)
