@@ -1,0 +1,6 @@
+outs:
+- md5: 30d68ce40c8ae4a62d3347b9bdab5d8d.dir
+  size: 1588788108
+  nfiles: 3207
+  hash: md5
+  path: pdb_files
