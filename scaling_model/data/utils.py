@@ -80,80 +80,9 @@ class TestData(InMemoryDataset):
         return None
 
     def download(self) -> None:
-        # requestURL = "https://www.ebi.ac.uk/proteins/api/proteins?offset=0&size=100&reviewed=true&isoform=0"
-
-        # r = requests.get(requestURL, headers={"Accept": "application/xml"})
-
-        # if not r.ok:
-        #     r.raise_for_status()
-        #     sys.exit()
-
-        # responseBody = r.text
-
-        # file_path = os.path.join(self.data_path, "output.xml")
-        # with open(file_path, "w", encoding="utf-8") as file:
-        #     file.write(responseBody)
         pass
 
     def process(self):
-
-        # file_path = os.path.join(self.data_path, "output.xml")
-        # with open(file_path, "r", encoding="utf-8") as file:
-        #     xml_data_str = file.read()
-
-        # xml_data_bytes = xml_data_str.encode("utf-8")
-        # root = etree.fromstring(xml_data_bytes)
-
-        # namespaces = {
-        #     "uniprot": "http://uniprot.org/uniprot",
-        #     "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-        # }
-
-        # df = pd.DataFrame(
-        #     columns=[
-        #         "pdb",
-        #         "accession",
-        #         "name",
-        #         "sequence",
-        #         "coords",
-        #         "mw",
-        #         "pI",
-        #         "II",
-        #         "aromaticity",
-        #         "gravy",
-        #     ]
-        # )
-
-        # for entry in root.findall("uniprot:entry", namespaces):
-        #     sequence = entry.find("uniprot:sequence", namespaces).text
-        #     # print(sequence)
-        #     accession = entry.find("uniprot:accession", namespaces).text
-        #     # print(f"Accession: {accession}")
-        #     name = entry.find("uniprot:name", namespaces).text
-        #     # print(f"Name: {name}")
-        #     pdb_ids = entry.findall(".//uniprot:dbReference[@type='PDB']", namespaces)
-        #     for pdb_id in pdb_ids:
-        #         # print(f"PDB ID: {pdb_id.get('id')}")
-        #         df.loc[len(df.index)] = [
-        #             pdb_id.get("id"),
-        #             accession,
-        #             name,
-        #             sequence,
-        #             None,
-        #             None,
-        #             None,
-        #             None,
-        #             None,
-        #             None,
-        #         ]
-        # df = df.drop_duplicates()
-
-        # for _, row in df.iterrows():
-        #     pdb_id = row.pdb
-        #     row["coords"] = get_atomic_structure(row.pdb)
-        #     row["mw"], row["pI"], row["II"], row["aromaticity"], row["gravy"] = (
-        #         get_prot_analysis(row.sequence)
-        #     )
 
         df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
 
