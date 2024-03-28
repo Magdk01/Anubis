@@ -4,6 +4,9 @@ from scaling_model.models.utils import PredictionWriter
 from scaling_model.models.painn_lightning import PaiNNforQM9
 from scaling_model.data.data_module import QM9DataModule, TestDataModule
 
+from lightning.pytorch.profilers import PyTorchProfiler
+from torch.profiler import ProfilerActivity
+
 
 @hydra.main(
     config_path="configs",
@@ -20,9 +23,10 @@ def main(cfg):
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
+    profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
     dm = TestDataModule(**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
-    trainer = Trainer(callbacks=cb, **cfg.trainer)
+    trainer = Trainer(callbacks=cb, profiler=profiler, **cfg.trainer)
     trainer.fit(model, datamodule=dm)
     trainer.test(model, datamodule=dm, ckpt_path="best")
     trainer.predict(
