@@ -2,12 +2,12 @@ seed: 0
 experiment: painn_qm9
 
 data:
-  target: 1
+  target: 0
   data_dir: data/
   batch_size_train: 1
   batch_size_inference: 1
   num_workers: 11
-  splits: [12, 2, 2]
+  splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
 
