@@ -168,7 +168,7 @@ class TestDataModule(pl.LightningDataModule):
 
         dataset = TestData(
             root=self.data_dir,
-            max_protien_size=self.max_protein_size,
+            max_protein_size=self.max_protein_size,
             transform=GetTarget(self.target),
         )
 
