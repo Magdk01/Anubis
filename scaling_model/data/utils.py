@@ -11,16 +11,21 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from biopandas.pdb import PandasPdb
 from periodictable import elements
 
-def get_atomic_structure(pdb_id):
-        try:
-            ppdb =PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
-            # ppdb = PandasPdb().fetch_pdb(pdb_id)
-            atom = ppdb.df['ATOM']
-            structure = list(zip(atom.element_symbol,atom.x_coord,atom.y_coord,atom.z_coord))
-            return structure
-        except:
-            print(pdb_id)
+
+def get_atomic_structure(pdb_id, max_protein_size):
+    try:
+        ppdb = PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
+        # ppdb = PandasPdb().fetch_pdb(pdb_id)
+        atom = ppdb.df["ATOM"]
+        if len(atom) > max_protein_size:
             return None
+        structure = list(
+            zip(atom.element_symbol, atom.x_coord, atom.y_coord, atom.z_coord)
+        )
+        return structure
+    except:
+        print(pdb_id)
+        return None
 
 
 def get_prot_analysis(sequence):
@@ -38,6 +43,7 @@ class TestData(InMemoryDataset):
     def __init__(
         self,
         root: str,
+        max_protein_size: int = torch.inf,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
         pre_filter: Optional[Callable] = None,
@@ -45,6 +51,7 @@ class TestData(InMemoryDataset):
         data_path: str = "raw",
     ) -> None:
         self.data_path = os.path.join(root, data_path)
+        self.max_protein_size = max_protein_size
         super().__init__(
             root, transform, pre_transform, pre_filter, force_reload=force_reload
         )
@@ -88,12 +95,8 @@ class TestData(InMemoryDataset):
         #     file.write(responseBody)
         pass
 
-
-    
-
     def process(self):
-        
-        
+
         # file_path = os.path.join(self.data_path, "output.xml")
         # with open(file_path, "r", encoding="utf-8") as file:
         #     xml_data_str = file.read()
@@ -152,22 +155,19 @@ class TestData(InMemoryDataset):
         #         get_prot_analysis(row.sequence)
         #     )
 
-        df = pd.read_excel('data/raw/MonomericProteinsWithFeatures.xlsx')
-
+        df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
 
         element_translation = {el.symbol.lower(): el.number for el in elements}
-        element_translation['d'] = 1
+        element_translation["d"] = 1
         data_list = list()
         for j, row in df.iterrows():
             pdb_id = row.PDB
-            coords = get_atomic_structure(pdb_id)
+            coords = get_atomic_structure(pdb_id, self.max_protein_size)
             if coords == None:
                 continue
 
             name = row["PDB"]
-            y = torch.tensor(
-                [row["Alpha"], row["Beta"]]
-            )
+            y = torch.tensor([row["Alpha"], row["Beta"]])
             x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
 
             n_atoms = len(coords)

@@ -137,6 +137,7 @@ class TestDataModule(pl.LightningDataModule):
         data_dir: str = "data/",
         batch_size_train: int = 32,
         batch_size_inference: int = 32,
+        max_protein_size: int = torch.inf,
         num_workers: int = 0,
         splits: Union[List[int], List[float]] = [0.8, 0.1, 0.1],
         seed: int = 0,
@@ -148,6 +149,7 @@ class TestDataModule(pl.LightningDataModule):
         self.data_dir = data_dir
         self.batch_size_train = batch_size_train
         self.batch_size_inference = batch_size_inference
+        self.max_protein_size = max_protein_size
         self.num_workers = num_workers
         self.splits = splits
         self.seed = seed
@@ -164,7 +166,11 @@ class TestDataModule(pl.LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
 
-        dataset = TestData(root=self.data_dir, transform=GetTarget(self.target))
+        dataset = TestData(
+            root=self.data_dir,
+            max_protien_size=self.max_protein_size,
+            transform=GetTarget(self.target),
+        )
 
         # Shuffle dataset
         rng = np.random.default_rng(seed=self.seed)
