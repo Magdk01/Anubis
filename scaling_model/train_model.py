@@ -6,7 +6,7 @@ from scaling_model.data.data_module import QM9DataModule, TestDataModule
 
 from lightning.pytorch.profilers import PyTorchProfiler
 from torch.profiler import ProfilerActivity
-
+import pytorch_lightning as pl
 
 @hydra.main(
     config_path="configs",
@@ -19,14 +19,21 @@ def main(cfg):
     # logger.log_hyperparams(cfg, {"hp/val_loss": float("inf")})
     cb = [
         callbacks.LearningRateMonitor(),
-        callbacks.EarlyStopping(**cfg.early_stopping),
+        # callbacks.EarlyStopping(**cfg.early_stopping),
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
-    profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
+    # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
     dm = TestDataModule(**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
-    trainer = Trainer(callbacks=cb, profiler=profiler, **cfg.trainer)
+    trainer = Trainer(callbacks=cb,
+                       #profiler=profiler,
+                        logger=pl.loggers.WandbLogger(
+                        project=cfg.wandb.project,
+                        name=cfg.wandb.name,
+                        entity=cfg.wandb.entity,
+        ),
+                         **cfg.trainer)
     trainer.fit(model, datamodule=dm)
     trainer.test(model, datamodule=dm, ckpt_path="best")
     trainer.predict(
