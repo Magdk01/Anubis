@@ -87,9 +87,11 @@ class TestData(InMemoryDataset):
         pass
 
     def process(self):
-
+        target_cols = ["Alpha", "Beta"]
         df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
-
+        df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
+            target_cols
+        ].std()
         element_translation = {el.symbol.lower(): el.number for el in elements}
         element_translation["d"] = 1
         data_list = list()
@@ -100,7 +102,7 @@ class TestData(InMemoryDataset):
                 continue
 
             name = row["PDB"]
-            y = torch.tensor([row["Alpha"], row["Beta"]])
+            y = torch.tensor([row[col] for col in target_cols])
             x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
 
             n_atoms = len(coords)
