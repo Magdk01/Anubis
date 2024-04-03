@@ -11,20 +11,24 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from biopandas.pdb import PandasPdb
 from periodictable import elements
 
+bad_ids = [
+           "1hje"
+           ]
 
 def get_atomic_structure(pdb_id, max_protein_size):
     try:
         ppdb = PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
         # ppdb = PandasPdb().fetch_pdb(pdb_id)
         atom = ppdb.df["ATOM"]
-        if len(atom) > max_protein_size:
+        if len(atom) > max_protein_size or pdb_id in bad_ids:
             return None
         structure = list(
             zip(atom.element_symbol, atom.x_coord, atom.y_coord, atom.z_coord)
         )
         return structure
+    
     except:
-        print(pdb_id)
+        # print(pdb_id)
         return None
 
 
