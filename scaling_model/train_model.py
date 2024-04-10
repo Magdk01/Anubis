@@ -37,7 +37,7 @@ def main(cfg):
             project=cfg.wandb.project,
             name=cfg.wandb.name,
             entity=cfg.wandb.entity,
-            config=cfg,
+            config=dict(cfg),
         ),
         **cfg.trainer,
     )

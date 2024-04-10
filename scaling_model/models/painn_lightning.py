@@ -108,7 +108,7 @@ class PaiNNforQM9(pl.LightningModule):
             y_hat.mean(),
             on_step=True,
             on_epoch=False,
-            prog_bar=True,
+            prog_bar=False,
             logger=True,
             batch_size=batch.y.shape[0],
         )
@@ -118,7 +118,7 @@ class PaiNNforQM9(pl.LightningModule):
             batch.y.mean(),
             on_step=True,
             on_epoch=False,
-            prog_bar=True,
+            prog_bar=False,
             logger=True,
             batch_size=batch.y.shape[0],
         )
