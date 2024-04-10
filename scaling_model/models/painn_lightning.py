@@ -102,6 +102,27 @@ class PaiNNforQM9(pl.LightningModule):
         }
         y_hat = self(**input_)
         loss = F.mse_loss(y_hat, batch.y, reduction=reduction)
+
+        self.log(
+            "predictions",
+            y_hat.mean(),
+            on_step=True,
+            on_epoch=False,
+            prog_bar=True,
+            logger=True,
+            batch_size=batch.y.shape[0],
+        )
+
+        self.log(
+            "targets",
+            batch.y.mean(),
+            on_step=True,
+            on_epoch=False,
+            prog_bar=True,
+            logger=True,
+            batch_size=batch.y.shape[0],
+        )
+
         return loss
 
     def training_step(self, batch, batch_idx):
