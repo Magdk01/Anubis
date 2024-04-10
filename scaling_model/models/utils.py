@@ -495,11 +495,11 @@ class AtomwisePrediction(nn.Module):
         """
         num_graphs = torch.unique(graph_indexes).shape[0]
         # Get atomwise contributions
-        atomwise_contributions = self.readout_network(
+        atomwise_contributions1 = self.readout_network(
             scalar_features
         )  # [num_nodes, num_outputs]
         atomwise_contributions = self.prediction_finalizer(
-            atomwise_contributions,
+            atomwise_contributions1,
             atoms,
         )
         # Sum contributions for each graph

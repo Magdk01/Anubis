@@ -7,6 +7,9 @@ from scaling_model.data.data_module import QM9DataModule, TestDataModule
 from lightning.pytorch.profilers import PyTorchProfiler
 from torch.profiler import ProfilerActivity
 import pytorch_lightning as pl
+import torch
+
+torch.set_float32_matmul_precision('medium')
 
 @hydra.main(
     config_path="configs",
@@ -27,7 +30,7 @@ def main(cfg):
     dm = TestDataModule(**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(callbacks=cb,
-                       #profiler=profiler,
+                    #    profiler=profiler,
                         logger=pl.loggers.WandbLogger(
                         project=cfg.wandb.project,
                         name=cfg.wandb.name,

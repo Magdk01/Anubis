@@ -10,11 +10,21 @@ from torch_geometric.data import Data, InMemoryDataset
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from biopandas.pdb import PandasPdb
 from periodictable import elements
-
+from tqdm import tqdm
 bad_ids = [
-           "1hje"
+        #    "1hje"
            ]
-
+def check_duplicate_coordinates(coordinates):
+    """
+    Checks if any two atoms in the list share the same coordinates.
+    Returns True if duplicates are found, else False.
+    """
+    unique_coordinates = set(coordinates)
+    if len(unique_coordinates) < len(coordinates):
+        return True
+    else:
+        return False
+    
 def get_atomic_structure(pdb_id, max_protein_size):
     try:
         ppdb = PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
@@ -22,6 +32,13 @@ def get_atomic_structure(pdb_id, max_protein_size):
         atom = ppdb.df["ATOM"]
         if len(atom) > max_protein_size or pdb_id in bad_ids:
             return None
+        
+        if check_duplicate_coordinates(list(
+            zip(atom.x_coord, atom.y_coord, atom.z_coord)
+        )):
+            print(pdb_id)
+            return None
+
         structure = list(
             zip(atom.element_symbol, atom.x_coord, atom.y_coord, atom.z_coord)
         )
@@ -40,6 +57,8 @@ def get_prot_analysis(sequence):
     aromaticity = analysis.aromaticity()
     gravy = analysis.gravy()
     return mw, pI, instability, aromaticity, gravy
+
+
 
 
 class TestData(InMemoryDataset):
@@ -95,7 +114,7 @@ class TestData(InMemoryDataset):
         element_translation = {el.symbol.lower(): el.number for el in elements}
         element_translation["d"] = 1
         data_list = list()
-        for j, row in df.iterrows():
+        for j, row in tqdm(df.iterrows(),total=len(df)):
             pdb_id = row.PDB
             coords = get_atomic_structure(pdb_id, self.max_protein_size)
             if coords == None:
