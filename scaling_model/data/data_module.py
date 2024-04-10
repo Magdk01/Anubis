@@ -166,18 +166,21 @@ class TestDataModule(pl.LightningDataModule):
 
     def prepare_data(self) -> None:
         if self.download:
-            if not self.random_data:
-                TestData(self.data_dir)
-            else:
-                RandomData(self.data_dir)
+            TestData(self.data_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
-
-        dataset = TestData(
-            root=self.data_dir,
-            max_protein_size=self.max_protein_size,
-            transform=GetTarget(self.target),
-        )
+        if self.random_data:
+            dataset = RandomData(
+                root=self.data_dir,
+                max_protein_size=self.max_protein_size,
+                transform=GetTarget(self.target),
+            )
+        else:
+            dataset = TestData(
+                root=self.data_dir,
+                max_protein_size=self.max_protein_size,
+                transform=GetTarget(self.target),
+            )
 
         # Shuffle dataset
         rng = np.random.default_rng(seed=self.seed)

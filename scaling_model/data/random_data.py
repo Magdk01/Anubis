@@ -1,4 +1,6 @@
 import os
+import random
+import math
 
 import torch
 
@@ -52,14 +54,15 @@ class RandomData(InMemoryDataset):
 
     def process(self):
         data_list = list()
-        for i in range(1_000):
-            prot_length = torch.randint(low=100, high=self.max_protein_size)
-            x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
-            z = torch.tensor([[prot_length]])
-            pos = torch.rand(3, prot_length)
-            y = torch.tensor([[prot_length * 10]])
+        for i in range(1000):
+            prot_length = random.randint(a=50, b=self.max_protein_size)
+            pos = torch.rand(prot_length, 3) * 30
             name = f"{prot_length}_{i}"
-            data = Data(x=x, z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=i)
+
+            z = torch.randint(low=1, high=3, size=(1, prot_length)).squeeze()
+            y = torch.tensor([1 / (1 + math.exp(torch.mean(-z.float())))])
+
+            data = Data(z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=i)
             data_list.append(data)
 
         self.save(data_list, self.processed_paths[0])
