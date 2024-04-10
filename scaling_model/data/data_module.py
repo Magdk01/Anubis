@@ -8,6 +8,7 @@ from torch_geometric.loader import DataLoader
 from torch_geometric.transforms import BaseTransform
 
 from scaling_model.data.utils import TestData
+from scaling_model.data.random_data import RandomData
 
 
 class GetTarget(BaseTransform):
@@ -143,6 +144,7 @@ class TestDataModule(pl.LightningDataModule):
         seed: int = 0,
         subset_size: Optional[int] = None,
         download: Optional[bool] = False,
+        random_data: Optional[bool] = False,
     ) -> None:
         super().__init__()
         self.target = target
@@ -160,9 +162,14 @@ class TestDataModule(pl.LightningDataModule):
         self.data_val = None
         self.data_test = None
 
+        self.random_data = random_data
+
     def prepare_data(self) -> None:
         if self.download:
-            TestData(self.data_dir)
+            if not self.random_data:
+                TestData(self.data_dir)
+            else:
+                RandomData(self.data_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
 
