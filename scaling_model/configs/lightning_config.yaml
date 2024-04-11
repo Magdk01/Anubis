@@ -3,8 +3,8 @@ experiment: painn_qm9
 
 data:
   target: 0
-  data_dir: data_1500/
-  max_protein_size: 1500
+  data_dir: data_1520/
+  max_protein_size: 1520
   batch_size_train: 2
   batch_size_inference: 1
   num_workers: 8
