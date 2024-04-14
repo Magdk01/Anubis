@@ -3,9 +3,9 @@ experiment: painn_qm9
 
 data:
   target: 0
-  data_dir: data_1520/
+  data_dir: data_random/
   max_protein_size: 1520
-  batch_size_train: 2
+  batch_size_train: 20
   batch_size_inference: 1
   num_workers: 8
   splits: [0.8, 0.1, 0.1]
@@ -48,16 +48,12 @@ model_checkpoint:
     mode: min
 
 trainer:
-  max_epochs: 1000
+  max_epochs: 1
   max_time: 02:23:30:00
   deterministic: true
 
 logger:
-    save_dir: logs/${experiment}
-    name: default
-    default_hp_metric: false
-
-wandb:
+  save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: jetson_run_${now:%Y-%m-%d_%H-%M-%S}
+  name: eske_random_run_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis

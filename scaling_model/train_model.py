@@ -34,10 +34,8 @@ def main(cfg):
         callbacks=cb,
         # profiler=profiler,
         logger=pl.loggers.WandbLogger(
-            project=cfg.wandb.project,
-            name=cfg.wandb.name,
-            entity=cfg.wandb.entity,
             config=dict(cfg),
+            **cfg.logger,
         ),
         **cfg.trainer,
     )

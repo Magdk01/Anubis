@@ -56,6 +56,8 @@ class PaiNNforQM9(pl.LightningModule):
             torch.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
         )
 
+        self.save_hyperparameters()
+
     def forward(self, atoms, atom_positions, graph_indexes):
         scalar_features, vector_features = self.painn(
             atoms, atom_positions, graph_indexes

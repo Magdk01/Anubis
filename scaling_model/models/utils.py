@@ -710,7 +710,8 @@ class PredictionWriter(callbacks.BasePredictionWriter):
             merged_metrics[key] = value.detach().cpu().item()
 
         df_metrics = pd.DataFrame(merged_metrics, index=[trainer.datamodule.target])
-        df_metrics.to_csv(f"{trainer.logger.log_dir}/metrics.csv")
+        print(trainer.logger)
+        df_metrics.to_csv(f"{trainer.logger.save_dir}/metrics.csv")
 
         # Collect results in dataframe
         preds = torch.cat(self.preds, dim=0)
@@ -725,4 +726,4 @@ class PredictionWriter(callbacks.BasePredictionWriter):
 
         # Add one-hot encoding to indicate data split
         df = df.join(pd.get_dummies(self.split, dtype=float))
-        df.to_csv(f"{trainer.logger.log_dir}/predictions.csv", index=False)
+        df.to_csv(f"{trainer.logger.save_dir}/predictions.csv", index=False)
