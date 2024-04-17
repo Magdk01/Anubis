@@ -101,21 +101,17 @@ class QM9DataModule(pl.LightningDataModule):
         return y.mean(), y.std(), atom_refs
 
     def train_dataloader(self, shuffle=True) -> DataLoader:
-        return ShaDowKHopSampler(
+        return DataLoader(
             self.data_train,
-            depth=4,
-            num_neighbors=50,
-            batch_size=self.batch_size_inference,
+            batch_size=self.batch_size_train,
             num_workers=self.num_workers,
-            shuffle=False,
+            shuffle=shuffle,
             pin_memory=True,
         )
 
     def val_dataloader(self) -> DataLoader:
-        return ShaDowKHopSampler(
+        return DataLoader(
             self.data_val,
-            depth=4,
-            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
@@ -123,10 +119,8 @@ class QM9DataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
-        return ShaDowKHopSampler(
+        return DataLoader(
             self.data_test,
-            depth=4,
-            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
@@ -224,17 +218,21 @@ class TestDataModule(pl.LightningDataModule):
         return y.mean(), y.std(), atom_refs
 
     def train_dataloader(self, shuffle=True) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_train,
-            batch_size=self.batch_size_train,
+            depth=4,
+            num_neighbors=50,
+            batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
-            shuffle=shuffle,
+            shuffle=False,
             pin_memory=True,
         )
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_val,
+            depth=4,
+            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
@@ -242,8 +240,10 @@ class TestDataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_test,
+            depth=4,
+            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
