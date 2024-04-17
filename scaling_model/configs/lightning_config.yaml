@@ -1,17 +1,21 @@
 seed: 69
 experiment: painn_qm9
 
+sampler: baseline
+
 data:
   target: 0
-  data_dir: random_data_400/
-  max_protein_size: 400
-  batch_size_train: 20
+  data_dir: data_random/
+  max_protein_size: 2000
+  batch_size_train: 1
   batch_size_inference: 1
   num_workers: 8
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
   random_data: True
+  shadow_depth: 4
+  shadow_num_neighbors: 50
 
 lightning_model:
   ema_decay: 0.9
@@ -56,5 +60,5 @@ trainer:
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: mvin_random_run_${now:%Y-%m-%d_%H-%M-%S}
+  name: eske_random_run${sampler}_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
