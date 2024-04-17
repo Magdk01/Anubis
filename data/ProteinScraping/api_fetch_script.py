@@ -14,9 +14,9 @@ import re
 
 source_path = "data/ProteinScraping/"
 
-pymol_result_file = "PyMol_results_max_80_seq.txt"
+pymol_result_file = "Pymol_results_current.txt"
 
-scraped_csv_path = "scraped_proteins_dataset_test.csv"
+scraped_csv_path = "scraped_proteins_dataset_80_current.csv"
 
 def build_xml(offset=0,size=200):
     requestURL = f"https://www.ebi.ac.uk/proteins/api/proteins?offset={offset}&size={size}&reviewed=true&isoform=0&seqLength=1-80"
@@ -32,6 +32,19 @@ def build_xml(offset=0,size=200):
     file_path = source_path+'output.xml'
     with open(file_path, 'w', encoding='utf-8') as file:
         file.write(responseBody)
+
+
+def check_duplicate_coordinates(atom_info):
+    """
+    Checks if any two atoms in the list share the same coordinates.
+    Returns True if duplicates are found, else False.
+    """
+    coordinates = [(atom[1],atom[2],atom[3]) for atom in atom_info]
+    unique_coordinates = set(coordinates)
+    if len(unique_coordinates) < len(coordinates):
+        return True
+    else:
+        return False
 
 
 def get_atomic_structure(pdb_id):
@@ -67,7 +80,7 @@ def get_atomic_structure(pdb_id):
         print(err)
         return None
 
-    if len(atom_info) >2000:
+    if len(atom_info) >2000 or check_duplicate_coordinates(atom_info):
         return None
     return atom_info
 
@@ -108,7 +121,7 @@ def read_xml(filepath = source_path+"output.xml"):
 
 
 df = pd.DataFrame()
-for i in tqdm(range(1)):
+for i in tqdm(range(500)):
     build_xml(0+i*200,200)
     df = pd.concat([df,read_xml()])
 df
@@ -149,6 +162,8 @@ res_df["coords"] = None
 
 coords_list = []
 
+
+
 # Iterate over each row in the DataFrame
 for index, row in tqdm(res_df.iterrows(),total=len(res_df)):
     # Apply the get_atomic_structure function to the lowercase PDB value of the current row
@@ -156,6 +171,8 @@ for index, row in tqdm(res_df.iterrows(),total=len(res_df)):
     coords = get_atomic_structure(str(row['PDB']).lower())
     # Append the result to the coords_list
     coords_list.append(coords)
+
+
 
 # Assign the list of coordinates to the 'coords' column of the DataFrame
 res_df['coords'] = coords_list
