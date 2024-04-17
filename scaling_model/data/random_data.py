@@ -54,13 +54,16 @@ class RandomData(InMemoryDataset):
 
     def process(self):
         data_list = list()
-        for i in range(1000):
+        for i in range(10000):
             prot_length = random.randint(a=50, b=self.max_protein_size)
             pos = torch.rand(prot_length, 3) * 30
             name = f"{prot_length}_{i}"
 
-            z = torch.randint(low=1, high=3, size=(1, prot_length)).squeeze()
-            y = torch.tensor([1 / (1 + math.exp(torch.mean(-z.float())))])
+            z = torch.randint(low=1, high=9, size=(1, prot_length)).squeeze()
+            # y = torch.tensor([1 / (1 + math.exp(torch.mean(-z.float())))])
+            
+            y = torch.tensor([torch.sum(z.float())])
+            #                  )
 
             data = Data(z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=i)
             data_list.append(data)
