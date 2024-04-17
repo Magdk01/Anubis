@@ -32,7 +32,7 @@ def main(cfg):
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
-    dm_translation = {"baseline": BaselineDataModule, "shadow": ShadowDataModule}
+    dm_translation = {"baseline": BaselineDataModule}
     dm = dm_translation[cfg.sampler](**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(
