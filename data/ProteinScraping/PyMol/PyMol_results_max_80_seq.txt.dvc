@@ -1,0 +1,5 @@
+outs:
+- md5: eee4c4cd627e1907e2ef3b0d55c081c7
+  size: 13151
+  hash: md5
+  path: PyMol_results_max_80_seq.txt

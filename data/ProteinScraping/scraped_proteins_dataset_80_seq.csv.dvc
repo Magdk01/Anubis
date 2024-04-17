@@ -1,0 +1,5 @@
+outs:
+- md5: 18c400bca80b8f68c0e4e1a5d3601c56
+  size: 19040374
+  hash: md5
+  path: scraped_proteins_dataset_80_seq.csv
