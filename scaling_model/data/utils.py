@@ -77,6 +77,7 @@ class ProteinData(InMemoryDataset):
     ) -> None:
         self.data_path = os.path.join(root, data_path)
         self.max_protein_size = max_protein_size
+        self.cutoff_dist = 3.0
         super().__init__(
             root, transform, pre_transform, pre_filter, force_reload=force_reload
         )
