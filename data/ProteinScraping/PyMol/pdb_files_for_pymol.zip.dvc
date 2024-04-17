@@ -1,0 +1,5 @@
+outs:
+- md5: 6c35127024a0bc2e66cf716c0ad53c5d
+  size: 12580364106
+  hash: md5
+  path: pdb_files_for_pymol.zip
