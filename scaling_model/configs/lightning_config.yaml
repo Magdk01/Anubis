@@ -1,5 +1,5 @@
 seed: 69
-experiment: painn_qm9
+experiment: debugging_runs
 
 sampler: baseline
 
@@ -24,7 +24,7 @@ lightning_model:
     num_features: 128
     num_rbf_features: 20
     num_unique_atoms: 100
-    cutoff_dist: 6.0
+    cutoff_dist: 8.0
   prediction_kwargs:
     num_features: ${lightning_model.painn_kwargs.num_features}
     num_layers: 2
@@ -60,5 +60,5 @@ trainer:
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: eske_random_run${sampler}_${now:%Y-%m-%d_%H-%M-%S}
+  name: mvin_${experiment}_random_data_${data.random_data}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis

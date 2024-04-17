@@ -146,7 +146,7 @@ class ProteinData(InMemoryDataset):
 
             self.save(data_list, self.processed_paths[0])
         else:
-            df = pd.read_csv("data/raw/scraped_proteins_dataset.csv")
+            df = pd.read_csv("data/raw/scraped_proteins_dataset_80_current.csv")
             df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
                 target_cols
             ].std()
