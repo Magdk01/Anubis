@@ -182,3 +182,15 @@ cython_debug/
 *.pdb
 
 sandbox.ipynb
+
+*.cif
+wandb
+
+
+lightning_logs
+debugging
+logs/
+*.hydra
+*.csv
+*.txt
+*.zip
