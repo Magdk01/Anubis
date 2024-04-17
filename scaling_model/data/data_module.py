@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 from torch_geometric.data import Data
 from torch_geometric.datasets import QM9
 from typing import Optional, List, Union
-from torch_geometric.loader import DataLoader
+from torch_geometric.loader import DataLoader, ShaDowKHopSampler
 from torch_geometric.transforms import BaseTransform
 
 from scaling_model.data.utils import TestData
@@ -101,17 +101,21 @@ class QM9DataModule(pl.LightningDataModule):
         return y.mean(), y.std(), atom_refs
 
     def train_dataloader(self, shuffle=True) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_train,
-            batch_size=self.batch_size_train,
+            depth=4,
+            num_neighbors=50,
+            batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
-            shuffle=shuffle,
+            shuffle=False,
             pin_memory=True,
         )
 
     def val_dataloader(self) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_val,
+            depth=4,
+            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
@@ -119,8 +123,10 @@ class QM9DataModule(pl.LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
-        return DataLoader(
+        return ShaDowKHopSampler(
             self.data_test,
+            depth=4,
+            num_neighbors=50,
             batch_size=self.batch_size_inference,
             num_workers=self.num_workers,
             shuffle=False,
