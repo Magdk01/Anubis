@@ -2,7 +2,10 @@ import hydra
 from pytorch_lightning import Trainer, callbacks, loggers, seed_everything
 from scaling_model.models.utils import PredictionWriter
 from scaling_model.models.painn_lightning import PaiNNforQM9
-from scaling_model.data.data_module import QM9DataModule, TestDataModule
+from scaling_model.data.data_module import (
+    QM9DataModule,
+    BaselineDataModule,
+)
 
 from lightning.pytorch.profilers import PyTorchProfiler
 from torch.profiler import ProfilerActivity
@@ -28,15 +31,15 @@ def main(cfg):
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
-    dm = TestDataModule(**cfg.data)
+    dm = BaselineDataModule(**cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(
         callbacks=cb,
         # profiler=profiler,
-        logger=pl.loggers.WandbLogger(
-            config=dict(cfg),
-            **cfg.logger,
-        ),
+        # logger=pl.loggers.WandbLogger(
+        #     config=dict(cfg),
+        #     **cfg.logger,
+        # ),
         **cfg.trainer,
     )
     trainer.fit(model, datamodule=dm)

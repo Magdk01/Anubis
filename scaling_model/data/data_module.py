@@ -7,8 +7,8 @@ from typing import Optional, List, Union
 from torch_geometric.loader import DataLoader, ShaDowKHopSampler
 from torch_geometric.transforms import BaseTransform
 
-from scaling_model.data.utils import TestData
-from scaling_model.data.random_data import RandomData
+from scaling_model.data.utils import ProteinData
+from scaling_model.data.random_data import SyntheticData
 
 
 class GetTarget(BaseTransform):
@@ -128,7 +128,7 @@ class QM9DataModule(pl.LightningDataModule):
         )
 
 
-class TestDataModule(pl.LightningDataModule):
+class BaselineDataModule(pl.LightningDataModule):
 
     target_types = ["atomwise" for _ in range(5)]
 
@@ -145,6 +145,9 @@ class TestDataModule(pl.LightningDataModule):
         subset_size: Optional[int] = None,
         download: Optional[bool] = False,
         random_data: Optional[bool] = False,
+        # only for compatibility
+        shadow_depth: Optional[int] = 4,
+        shadow_num_neighbors: Optional[int] = 50,
     ) -> None:
         super().__init__()
         self.target = target
@@ -164,19 +167,23 @@ class TestDataModule(pl.LightningDataModule):
 
         self.random_data = random_data
 
+        # Only for compatibility
+        self.shadow_depth = shadow_depth
+        self.shadow_num_neighbors = shadow_num_neighbors
+
     def prepare_data(self) -> None:
         if self.download:
-            TestData(self.data_dir)
+            ProteinData(self.data_dir)
 
     def setup(self, stage: Optional[str] = None) -> None:
         if self.random_data:
-            dataset = RandomData(
+            dataset = SyntheticData(
                 root=self.data_dir,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),
             )
         else:
-            dataset = TestData(
+            dataset = ProteinData(
                 root=self.data_dir,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),

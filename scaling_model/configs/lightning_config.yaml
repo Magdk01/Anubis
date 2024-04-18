@@ -1,6 +1,8 @@
 seed: 42069420
 experiment: debugging_runs
 
+sampler: shadow
+
 data:
   target: 0
   data_dir: scraped_data_450/
@@ -11,7 +13,7 @@ data:
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
-  random_data: False
+  random_data: True
 
 lightning_model:
   ema_decay: 0.9
@@ -56,5 +58,9 @@ trainer:
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: mvin_${experiment}_random_data_${data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
+  name: mvin_${experiment}_random_data_${data.random_data}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
+
+shadow:
+  shadow_depth: 4
+  shadow_num_neighbors: 50
