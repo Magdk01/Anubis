@@ -141,8 +141,9 @@ class TestData(InMemoryDataset):
                 data_list.append(data)
 
             self.save(data_list, self.processed_paths[0])
+            
         else:
-            df = pd.read_csv("data/raw/scraped_proteins_dataset_80_current.csv")
+            df = pd.read_csv("data/raw/scraped_proteins_dataset_PDB_new_1000.csv")
             df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
                 target_cols
             ].std()
@@ -157,6 +158,10 @@ class TestData(InMemoryDataset):
                 x = torch.tensor([0.0] * 11, dtype=float)  # TODO: Figure out what this is
 
                 n_atoms = len(coords)
+                if n_atoms != row.atom_len:
+                    print('hehe')
+                if n_atoms>self.max_protein_size:
+                    continue
                 z = torch.empty((n_atoms), dtype=torch.long)
                 pos = torch.empty((n_atoms, 3))
                 for i, x in enumerate(coords):

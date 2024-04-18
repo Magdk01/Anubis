@@ -80,7 +80,7 @@ def get_atomic_structure(pdb_id):
         print(err)
         return None
 
-    if len(atom_info) >2000 or check_duplicate_coordinates(atom_info):
+    if len(atom_info) >400 or check_duplicate_coordinates(atom_info):
         return None
     return atom_info
 

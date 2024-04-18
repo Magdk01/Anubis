@@ -1,11 +1,11 @@
-seed: 69
+seed: 42069420
 experiment: debugging_runs
 
 data:
   target: 0
-  data_dir: scraped_data_200/
-  max_protein_size: 200
-  batch_size_train: 3
+  data_dir: scraped_data_450/
+  max_protein_size: 450
+  batch_size_train: 4
   batch_size_inference: 1
   num_workers: 8
   splits: [0.8, 0.1, 0.1]
@@ -16,17 +16,17 @@ data:
 lightning_model:
   ema_decay: 0.9
   painn_kwargs:
-    num_message_passing_layers: 3
+    num_message_passing_layers: 2
     num_features: 128
     num_rbf_features: 20
     num_unique_atoms: 100
-    cutoff_dist: 8.0
+    cutoff_dist: 4.0
   prediction_kwargs:
     num_features: ${lightning_model.painn_kwargs.num_features}
     num_layers: 2
   optimizer_kwargs:
     weight_decay: 0.01
-    lr: 5e-4
+    lr: 1e-4
   lr_scheduler_kwargs:
     mode: min
     factor: 0.5
@@ -49,12 +49,12 @@ model_checkpoint:
     mode: min
 
 trainer:
-  max_epochs: 30
+  max_epochs: 50
   max_time: 02:23:30:00
   deterministic: true
 
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: mvin_{experiment}_random_data_{data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
+  name: mvin_${experiment}_random_data_${data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
