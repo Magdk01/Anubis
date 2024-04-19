@@ -146,8 +146,9 @@ class ProteinData(InMemoryDataset):
                 data_list.append(data)
 
             self.save(data_list, self.processed_paths[0])
+            
         else:
-            df = pd.read_csv("data/raw/scraped_proteins_dataset_80_current.csv")
+            df = pd.read_csv("data/raw/scraped_proteins_dataset_PDB_new_1000.csv")
             df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
                 target_cols
             ].std()
@@ -164,6 +165,11 @@ class ProteinData(InMemoryDataset):
                 )  # TODO: Figure out what this is
 
                 prot_length = len(coords)
+                if prot_length != row.atom_len:
+                    print('hehe')
+                if prot_length>self.max_protein_size:
+                    continue
+
                 z = torch.empty((prot_length), dtype=torch.long)
                 pos = torch.empty((prot_length, 3))
                 for i, x in enumerate(coords):

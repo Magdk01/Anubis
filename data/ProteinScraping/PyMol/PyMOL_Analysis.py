@@ -16,7 +16,7 @@ pymol.finish_launching()
 
 
 source_path = "data/ProteinScraping/"
-pymol_result_file = "PyMol_results_current.txt"
+pymol_result_file = "Pymol_results_current.txt"
 
 
 # Set path for loaded PDBs. 
