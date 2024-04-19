@@ -36,10 +36,10 @@ def main(cfg):
     trainer = Trainer(
         callbacks=cb,
         # profiler=profiler,
-        # logger=pl.loggers.WandbLogger(
-        #     config=dict(cfg),
-        #     **cfg.logger,
-        # ),
+        logger=pl.loggers.WandbLogger(
+            config=dict(cfg),
+            **cfg.logger,
+        ),
         **cfg.trainer,
     )
     trainer.fit(model, datamodule=dm)
