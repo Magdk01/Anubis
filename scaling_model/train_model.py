@@ -1,6 +1,6 @@
 import hydra
 from pytorch_lightning import Trainer, callbacks, loggers, seed_everything
-from scaling_model.models.utils import PredictionWriter
+from scaling_model.models.utils import PredictionWriter, PlottingCallback
 from scaling_model.models.painn_lightning import PaiNNforQM9
 from scaling_model.data.data_module import (
     QM9DataModule,
@@ -24,11 +24,16 @@ def main(cfg):
     seed_everything(cfg.seed)
     # logger = loggers.TensorBoardLogger(**cfg.logger)
     # logger.log_hyperparams(cfg, {"hp/val_loss": float("inf")})
+    logger=pl.loggers.WandbLogger(
+            config=dict(cfg),
+            **cfg.logger,
+        )
     cb = [
         callbacks.LearningRateMonitor(),
         # callbacks.EarlyStopping(**cfg.early_stopping),
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),
+        PlottingCallback(plot_interval=1)
     ]
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
     dm = BaselineDataModule(**cfg.data)
@@ -36,10 +41,7 @@ def main(cfg):
     trainer = Trainer(
         callbacks=cb,
         # profiler=profiler,
-        logger=pl.loggers.WandbLogger(
-            config=dict(cfg),
-            **cfg.logger,
-        ),
+        logger=logger,
         **cfg.trainer,
     )
     trainer.fit(model, datamodule=dm)

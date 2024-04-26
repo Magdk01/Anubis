@@ -5,8 +5,8 @@ sampler: shadow
 
 data:
   target: 0
-  data_dir: scraped_data_500/
-  max_protein_size: 500
+  data_dir: scraped_data_1000/
+  max_protein_size: 1000
   batch_size_train: 4
   batch_size_inference: 1
   num_workers: 8
@@ -18,7 +18,7 @@ data:
 lightning_model:
   ema_decay: 0.9
   painn_kwargs:
-    num_message_passing_layers: 3
+    num_message_passing_layers: 2
     num_features: 128
     num_rbf_features: 20
     num_unique_atoms: 100

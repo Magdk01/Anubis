@@ -194,3 +194,5 @@ logs/
 *.csv
 *.txt
 *.zip
+*.json
+*.pkl

@@ -13,11 +13,11 @@ from pymol import cmd
 pymol.finish_launching()
 
 # Set path for loaded PDBs. 
-cmd.set('fetch_path', cmd.exp_path(r"/home/mangus/Anubis/PyMol"), quiet=0)
+cmd.set('fetch_path', cmd.exp_path(r"/home/mangus/Anubis/notebooks/PyMol/pdb_files_for_pymol"), quiet=0)
 
 
 # Output file
-output = open("PyMol/Results_34.txt", "w")
+output = open("PyMol/Results_new_alp_none_map.txt", "a")
 output.write("PDB" + "\t" + "No. a.a." + "\t" + "Glycine" + "\t" + "S.S." + "\t" + "Long SS" + "\t" + "Charge" + "\t"+ "SASA" + "\t" + "No. pos." + "\t" + "No. Surf. pos." + "\t" + "Pos. area" + "\t" + "No. neg." + "\t" + "No. Surf. neg." + "\t" + "Neg. area" + "\t" + "No. hyd." + "\t" + "No. Surf. hyd." + "\t" + "hyd. area" + "\t" + "Alpha" + "\t" + "Beta" + "\t" + "Salt bridges" + "\t" + "H-bonds" + "\n")
  #Load PDB entries
 filename = 'PyMol/pdb_ids.txt'
@@ -27,10 +27,10 @@ PDBs = []
 
 # Open and read the file
 with open(filename, 'r') as file:
-    for line in file:
-        # Strip whitespace and add to the list
-        pdb_id = line.strip()
-        PDBs.append(pdb_id)
+	for line in file:
+		# Strip whitespace and add to the list
+		pdb_id = line.strip()
+		PDBs.append(pdb_id)
 
 # Load scripts
 cmd.do('''run PyMol/removealt.py''')
@@ -40,6 +40,7 @@ cmd.do('''run PyMol/get_raw_distances.py''')
 for pdb in PDBs: 
 	
 	# Load protein
+	print(pdb)
 	cmd.fetch(pdb)
 
 	# Remove hetatm, all but chain A, and alternative locations
@@ -102,47 +103,45 @@ for pdb in PDBs:
 	# Number of long-range SS
 	count = 0
 	if no_ssx >= 2:
-	    cmd.do('''select long_ss, CYS/SG and bound_to CYS/SG''')
-	    cmd.do('''myspace={'l': []}''')
-	    cmd.iterate('long_ss', 'l.append(resv)', space=myspace)
-	    lss = myspace['l']
-	    cmd.do('''myspace={'d': []}''')
+		cmd.do('''select long_ss, CYS/SG and bound_to CYS/SG''')
+		cmd.do('''myspace={'l': []}''')
+		cmd.iterate('long_ss', 'l.append(resv)', space=myspace)
+		lss = myspace['l']
+		cmd.do('''myspace={'d': []}''')
 
-	    count = 0
-	    for i in lss:
+		count = 0
+		for i in lss:
 
-	        t = []
-	        a = i
+			t = []
+			a = i
 
-	        cmd.select('d', '(not resid %s) and bound_to %s/SG' % (i, i))
-	        cmd.iterate('d', 't.append(resv)')
+			cmd.select('d', '(not resid %s) and bound_to %s/SG' % (i, i))
+			cmd.iterate('d', 't.append(resv)')
 
-	        if t:  # Check if t is not empty
-	            t_i = int("".join(map(str, t)))  # Safely convert elements to string and then to integer
-	            c = t_i - a
+			if t:  # Check if t is not empty
+				t_i = int("".join(map(str, t)))  # Safely convert elements to string and then to integer
+				c = t_i - a
 
-	            if abs(c) >= 12:
-	                count += 1
-	            # No else needed; if t is empty or the condition is not met, we simply don't increment count
+				if abs(c) >= 12:
+					count += 1
+				# No else needed; if t is empty or the condition is not met, we simply don't increment count
 
-	    count = count // 2  # Using integer division
-	    long_ss = str(count)
+		count = count // 2  # Using integer division
+		long_ss = str(count)
 	else:
-	    long_ss = "N"
-
-
-
-
-
-
+		long_ss = "N"
+		
 	# Secondary structure - percentage
 	cmd.do('''s = [i.ss for i in cmd.get_model("n. ca").atom]''')
-	alp = 100.0*s.count("H")/len(s)
-	bet  = 100.0*s.count("S")/len(s)
-	alp = str(alp)
-	bet  = str(bet)
-	
-	
+	if len(s) != 0:
+		alp = 100.0*s.count("H")/len(s)
+		bet  = 100.0*s.count("S")/len(s)
+		alp = str(alp)
+		bet  = str(bet)
+	else:
+		alp = "None"
+		bet = "None"
+
 	# Salt-bridges (https://sourceforge.net/p/pymol/mailman/message/29141454/)
 	cmd.do('''select roi, chain A''')
 	cmd.do('''select positive, resn ARG+LYS and not name N+O''')
@@ -155,21 +154,25 @@ for pdb in PDBs:
 	cmd.do('''distance saltbridges, roi and negative, roi and positive, mode=2''')
 	cmd.hide('label')
 
-	cmd.do('''get_raw_distances''')
-	cmd.do('''sb = get_raw_distances('saltbridges')''')
-	sb = len(sb)
-	sb = str(sb)
-	
+	try:
+		cmd.do('''get_raw_distances''')
+		cmd.do('''sb = get_raw_distances('saltbridges')''')
+		sb = len(sb)
+		sb = str(sb)
+	except:
+		sb = "None"
 	cmd.do('''set h_bond_cutoff_center, 3.6''')
 	cmd.do('''set h_bond_cutoff_edge, 3.6''')
 
-	# Hydrogen bonds - all
-	cmd.do('''distance H_bonds, roi, roi, quiet=1, mode=2, label=0, reset=1''')
-	cmd.do('''get_raw_distances''')
-	cmd.do('''hb = get_raw_distances('H_bonds')''')
-	hb = len(hb)
-	hb = str(hb)
-
+	try:
+		# Hydrogen bonds - all
+		cmd.do('''distance H_bonds, roi, roi, quiet=1, mode=2, label=0, reset=1''')
+		cmd.do('''get_raw_distances''')
+		cmd.do('''hb = get_raw_distances('H_bonds')''')
+		hb = len(hb)
+		hb = str(hb)
+	except:
+		hb = "None"
 	output.write(pdb + "\t" + no_aa + "\t" + no_gly + "\t" + no_ss + "\t" + long_ss + "\t" + charge + "\t" + sasa + "\t" + no_pos + "\t" + surf_pos + "\t" + surf_pos_area + "\t" + no_neg + "\t" + surf_neg + "\t" + surf_neg_area + "\t" + no_hyd + "\t" + surf_hyd + "\t" + surf_hyd_area + "\t" + alp + "\t" + bet + "\t" + sb + "\t" + hb + "\n")
 	
 

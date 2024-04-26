@@ -148,7 +148,11 @@ class ProteinData(InMemoryDataset):
             self.save(data_list, self.processed_paths[0])
             
         else:
-            df = pd.read_csv("data/raw/scraped_proteins_dataset_PDB_new_1000.csv")
+            df = pd.read_csv("data/raw/scraped_proteins_dataset_PDB_new_1000_streaming.csv",index_col=False)
+            if "Alpha" in target_cols:
+                df = df.drop(df[df["Alpha"]==0].index)
+                df = df.drop(df[df["Alpha"]==100].index)
+            
             df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
                 target_cols
             ].std()
@@ -165,8 +169,8 @@ class ProteinData(InMemoryDataset):
                 )  # TODO: Figure out what this is
 
                 prot_length = len(coords)
-                if prot_length != row.atom_len:
-                    print('hehe')
+                # if prot_length != row.atom_len:
+                #     print('hehe')
                 if prot_length>self.max_protein_size:
                     continue
 
