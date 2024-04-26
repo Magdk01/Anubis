@@ -1,5 +1,5 @@
 seed: 42069420
-experiment: debugging_runs_for_mean_agr
+experiment: HPC_ debugging_runs_for_mean_agr
 
 sampler: baseline
 
@@ -9,7 +9,7 @@ data:
   max_protein_size: 500
   batch_size_train: 4
   batch_size_inference: 1
-  num_workers: 22
+  num_workers: 4
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
@@ -58,6 +58,7 @@ trainer:
 
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
-  project: debugging
+  project: HPC_test
   name: mvin_${experiment}_random_data_${data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
+  dir: /zhome/16/a/167936/Desktop/Bachelor/Anubis

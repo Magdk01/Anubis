@@ -1,14 +1,12 @@
 import os
-import requests, sys
-from lxml import etree
+
 from typing import Callable, List, Optional
 
 import torch
 import pandas as pd
 from torch_geometric.data import Data, InMemoryDataset
 
-from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from biopandas.pdb import PandasPdb
+
 from periodictable import elements
 from tqdm import tqdm
 
@@ -29,38 +27,7 @@ def check_duplicate_coordinates(coordinates):
         return False
 
 
-def get_atomic_structure(pdb_id, max_protein_size):
-    try:
-        ppdb = PandasPdb().read_pdb(f"data/raw/pdb_files/{pdb_id}.pdb")
-        # ppdb = PandasPdb().fetch_pdb(pdb_id)
-        atom = ppdb.df["ATOM"]
-        if len(atom) > max_protein_size or pdb_id in bad_ids:
-            return None
 
-        if check_duplicate_coordinates(
-            list(zip(atom.x_coord, atom.y_coord, atom.z_coord))
-        ):
-            print(pdb_id)
-            return None
-
-        structure = list(
-            zip(atom.element_symbol, atom.x_coord, atom.y_coord, atom.z_coord)
-        )
-        return structure
-
-    except:
-        # print(pdb_id)
-        return None
-
-
-def get_prot_analysis(sequence):
-    analysis = ProteinAnalysis(sequence)
-    mw = analysis.molecular_weight()
-    pI = analysis.isoelectric_point()
-    instability = analysis.instability_index()
-    aromaticity = analysis.aromaticity()
-    gravy = analysis.gravy()
-    return mw, pI, instability, aromaticity, gravy
 
 
 class ProteinData(InMemoryDataset):
@@ -113,39 +80,39 @@ class ProteinData(InMemoryDataset):
         target_cols = ["Alpha", "Beta"]
 
         if chemesitry_excel:
+            pass
+            # """ df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
+            # df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
+            #     target_cols
+            # ].std()
+            # element_translation = {el.symbol.lower(): el.number for el in elements}
+            # element_translation["d"] = 1
+            # data_list = list()
+            # for j, row in tqdm(df.iterrows(), total=len(df)):
+            #     pdb_id = row.PDB
+            #     coords = get_atomic_structure(pdb_id, self.max_protein_size)
+            #     if coords == None:
+            #         continue
 
-            df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
-            df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
-                target_cols
-            ].std()
-            element_translation = {el.symbol.lower(): el.number for el in elements}
-            element_translation["d"] = 1
-            data_list = list()
-            for j, row in tqdm(df.iterrows(), total=len(df)):
-                pdb_id = row.PDB
-                coords = get_atomic_structure(pdb_id, self.max_protein_size)
-                if coords == None:
-                    continue
+            #     name = row["PDB"]
+            #     y = torch.tensor([row[col] for col in target_cols])
+            #     x = torch.tensor(
+            #         [0.0] * 11, dtype=float
+            #     )  # TODO: Figure out what this is
 
-                name = row["PDB"]
-                y = torch.tensor([row[col] for col in target_cols])
-                x = torch.tensor(
-                    [0.0] * 11, dtype=float
-                )  # TODO: Figure out what this is
+            #     n_atoms = len(coords)
+            #     z = torch.empty((n_atoms), dtype=torch.long)
+            #     pos = torch.empty((n_atoms, 3))
+            #     for i, x in enumerate(coords):
+            #         z[i] = torch.tensor(
+            #             int(element_translation[x[0].lower()]), dtype=torch.long
+            #         ).view(-1, 1)
+            #         pos[i] = torch.tensor([x[1], x[2], x[3]])
 
-                n_atoms = len(coords)
-                z = torch.empty((n_atoms), dtype=torch.long)
-                pos = torch.empty((n_atoms, 3))
-                for i, x in enumerate(coords):
-                    z[i] = torch.tensor(
-                        int(element_translation[x[0].lower()]), dtype=torch.long
-                    ).view(-1, 1)
-                    pos[i] = torch.tensor([x[1], x[2], x[3]])
+            #     data = Data(x=x, z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=j)
+            #     data_list.append(data)
 
-                data = Data(x=x, z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=j)
-                data_list.append(data)
-
-            self.save(data_list, self.processed_paths[0])
+            # self.save(data_list, self.processed_paths[0]) """
             
         else:
             df = pd.read_csv("data/raw/scraped_proteins_dataset_PDB_new_1000.csv",index_col=False)
