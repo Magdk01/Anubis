@@ -5,11 +5,11 @@ sampler: baseline
 
 data:
   target: 0
-  data_dir: scraped_data_1000/
-  max_protein_size: 1000
+  data_dir: scraped_data_500/
+  max_protein_size: 500
   batch_size_train: 4
   batch_size_inference: 1
-  num_workers: 0
+  num_workers: 23
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
@@ -21,7 +21,7 @@ data:
 lightning_model:
   ema_decay: 0.9
   painn_kwargs:
-    num_message_passing_layers: 2
+    num_message_passing_layers: 3
     num_features: 128
     num_rbf_features: 20
     num_unique_atoms: 100
