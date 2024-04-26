@@ -1,5 +1,5 @@
 seed: 42069420
-experiment: debugging_runs
+experiment: debugging_runs_for_mean_agr
 
 sampler: baseline
 
@@ -9,14 +9,12 @@ data:
   max_protein_size: 500
   batch_size_train: 4
   batch_size_inference: 1
-  num_workers: 23
+  num_workers: 22
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
-  random_data: True
-  shadow_depth: 4
-  shadow_num_neighbors: 50
-  cluster_num_parts: 30
+  random_data: False
+
 
 lightning_model:
   ema_decay: 0.9
@@ -25,7 +23,7 @@ lightning_model:
     num_features: 128
     num_rbf_features: 20
     num_unique_atoms: 100
-    cutoff_dist: 6.0
+    cutoff_dist: 5.0
   prediction_kwargs:
     num_features: ${lightning_model.painn_kwargs.num_features}
     num_layers: 2
@@ -54,12 +52,12 @@ model_checkpoint:
     mode: min
 
 trainer:
-  max_epochs: 1
+  max_epochs: 10
   max_time: 02:23:30:00
   deterministic: true
 
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
   project: debugging
-  name: mvin_${experiment}_random_data_${data.random_data}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
+  name: mvin_${experiment}_random_data_${data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis

@@ -34,7 +34,7 @@ def main(cfg):
         # callbacks.EarlyStopping(**cfg.early_stopping),
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),    ]
-    profiler = AdvancedProfiler(dirpath=cfg.logger.save_dir, filename="perf_logs")
+    # profiler = AdvancedProfiler(dirpath=cfg.logger.save_dir, filename="perf_logs")
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
     dm = BaselineDataModule(sampler=cfg.sampler, **cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
@@ -42,7 +42,7 @@ def main(cfg):
         callbacks=cb,
         # profiler=profiler,
         logger=logger,
-        profiler=profiler,
+        # profiler=profiler,
         **cfg.trainer,
     )
     trainer.fit(model, datamodule=dm)
