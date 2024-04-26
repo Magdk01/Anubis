@@ -1,14 +1,62 @@
 import torch
 import numpy as np
 import pytorch_lightning as pl
-from torch_geometric.data import Data
+from torch.utils.data import DataLoader
+from torch_geometric.data import Data, Batch
 from torch_geometric.datasets import QM9
 from typing import Optional, List, Union
-from torch_geometric.loader import DataLoader, ShaDowKHopSampler
+from torch_geometric.loader import ShaDowKHopSampler, ClusterData, ClusterLoader
 from torch_geometric.transforms import BaseTransform
 
 from scaling_model.data.utils import ProteinData
 from scaling_model.data.random_data import SyntheticData
+
+
+class shadowBatches:
+    def __init__(self, depth, num_neighbors):
+        self.depth = depth
+        self.num_neighbors = num_neighbors
+
+    def __call__(self, batch):
+        minibatches = list()
+        for graph in batch:
+            minibatches.extend(
+                ShaDowKHopSampler(
+                    graph, depth=self.depth, num_neighbors=self.num_neighbors
+                )
+            )
+
+        return Batch.from_data_list(minibatches)
+
+
+class clusterBatches:
+    def __init__(self, num_parts, data_dir):
+        self.num_parts = num_parts
+        self.data_dir = data_dir
+
+    def __call__(self, batch):
+        minibatches = list()
+        for graph in batch:
+            minibatches.extend(
+                ClusterLoader(
+                    ClusterData(
+                        graph,
+                        num_parts=self.num_parts,
+                        recursive=False,
+                        save_dir=self.data_dir,
+                    ),
+                    batch_size=1,
+                )
+            )
+        return minibatches
+
+
+class baselineBatches:
+    def __init__(self):
+        pass
+
+    def __call__(self, batch):
+        return Batch.from_data_list(batch)
 
 
 class GetTarget(BaseTransform):
@@ -134,6 +182,7 @@ class BaselineDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
+        sampler: str = "baseline",
         target: int = 0,
         data_dir: str = "data/",
         batch_size_train: int = 32,
@@ -145,11 +194,12 @@ class BaselineDataModule(pl.LightningDataModule):
         subset_size: Optional[int] = None,
         download: Optional[bool] = False,
         random_data: Optional[bool] = False,
-        # only for compatibility
         shadow_depth: Optional[int] = 4,
         shadow_num_neighbors: Optional[int] = 50,
+        cluster_num_parts: Optional[int] = 30,
     ) -> None:
         super().__init__()
+        self.sampler = sampler
         self.target = target
         self.data_dir = data_dir
         self.batch_size_train = batch_size_train
@@ -166,10 +216,14 @@ class BaselineDataModule(pl.LightningDataModule):
         self.data_test = None
 
         self.random_data = random_data
-
-        # Only for compatibility
-        self.shadow_depth = shadow_depth
-        self.shadow_num_neighbors = shadow_num_neighbors
+        collate_dict = {
+            "shadow": shadowBatches(shadow_depth, shadow_num_neighbors),
+            "cluster": clusterBatches(
+                num_parts=cluster_num_parts, data_dir=self.data_dir
+            ),
+            "baseline": baselineBatches(),
+        }
+        self.collate = collate_dict.get(self.sampler, baselineBatches())
 
     def prepare_data(self) -> None:
         if self.download:
@@ -231,6 +285,7 @@ class BaselineDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=shuffle,
             pin_memory=True,
+            collate_fn=self.collate,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -240,6 +295,7 @@ class BaselineDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
             pin_memory=True,
+            collate_fn=self.collate,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -249,4 +305,27 @@ class BaselineDataModule(pl.LightningDataModule):
             num_workers=self.num_workers,
             shuffle=False,
             pin_memory=True,
+            collate_fn=self.collate,
         )
+
+
+if __name__ == "__main__":
+    cfg = {
+        "target": 0,
+        "data_dir": "./data_random/",
+        "max_protein_size": 2000,
+        "batch_size_train": 1,
+        "batch_size_inference": 1,
+        "num_workers": 12,
+        "splits": [0.8, 0.1, 0.1],
+        "seed": 69,
+        "subset_size": None,
+        "random_data": True,
+        "shadow_depth": 4,
+        "shadow_num_neighbors": 50,
+        "cluster_num_parts": 2,
+    }
+    dm = BaselineDataModule(sampler="cluster", **cfg)
+    dm.setup()
+    batches = dm.train_dataloader(shuffle=False)
+    print(list(batches))

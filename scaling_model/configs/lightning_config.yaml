@@ -1,7 +1,7 @@
 seed: 42069420
 experiment: debugging_runs
 
-sampler: shadow
+sampler: baseline
 
 data:
   target: 0
@@ -9,11 +9,14 @@ data:
   max_protein_size: 1000
   batch_size_train: 4
   batch_size_inference: 1
-  num_workers: 8
+  num_workers: 0
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
-  random_data: False
+  random_data: True
+  shadow_depth: 4
+  shadow_num_neighbors: 50
+  cluster_num_parts: 30
 
 lightning_model:
   ema_decay: 0.9
@@ -60,7 +63,3 @@ logger:
   project: debugging
   name: mvin_${experiment}_random_data_${data.random_data}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
-
-shadow:
-  shadow_depth: 4
-  shadow_num_neighbors: 50

@@ -36,7 +36,7 @@ def main(cfg):
         PlottingCallback(plot_interval=1)
     ]
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
-    dm = BaselineDataModule(**cfg.data)
+    dm = BaselineDataModule(sampler=cfg.sampler, **cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(
         callbacks=cb,
