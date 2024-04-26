@@ -93,7 +93,6 @@ class PaiNNMessageBlock(nn.Module):
         index_counts = torch.bincount(idx_i).float() 
         idx_cnt = index_counts.unsqueeze(-1).expand_as(scalar_residuals)
         scalar_residuals = scalar_residuals/idx_cnt
-        # count = torch.zeros_like(scalar_features)
 
         # Compute vector residuals
         vector_residuals = torch.zeros_like(

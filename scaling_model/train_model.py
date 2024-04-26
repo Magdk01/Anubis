@@ -1,6 +1,6 @@
 import hydra
 from pytorch_lightning import Trainer, callbacks, loggers, seed_everything
-from scaling_model.models.utils import PredictionWriter, PlottingCallback
+from scaling_model.models.utils import PredictionWriter
 from scaling_model.models.painn_lightning import PaiNNforQM9
 from scaling_model.data.data_module import (
     QM9DataModule,
@@ -11,6 +11,7 @@ from lightning.pytorch.profilers import PyTorchProfiler
 from torch.profiler import ProfilerActivity
 import pytorch_lightning as pl
 import torch
+from lightning.pytorch.profilers import AdvancedProfiler
 
 torch.set_float32_matmul_precision("medium")
 
@@ -32,9 +33,8 @@ def main(cfg):
         callbacks.LearningRateMonitor(),
         # callbacks.EarlyStopping(**cfg.early_stopping),
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
-        PredictionWriter(dataloaders=["train", "val", "test"]),
-        PlottingCallback(plot_interval=1)
-    ]
+        PredictionWriter(dataloaders=["train", "val", "test"]),    ]
+    profiler = AdvancedProfiler(dirpath=cfg.logger.save_dir, filename="perf_logs")
     # profiler = PyTorchProfiler(filename="profile_out", profile_memory=True)
     dm = BaselineDataModule(sampler=cfg.sampler, **cfg.data)
     model = PaiNNforQM9(**cfg.lightning_model)
@@ -42,6 +42,7 @@ def main(cfg):
         callbacks=cb,
         # profiler=profiler,
         logger=logger,
+        profiler=profiler,
         **cfg.trainer,
     )
     trainer.fit(model, datamodule=dm)
