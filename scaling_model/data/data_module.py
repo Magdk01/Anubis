@@ -154,9 +154,6 @@ class BaselineDataModule(pl.LightningDataModule):
         subset_size: Optional[int] = None,
         download: Optional[bool] = False,
         random_data: Optional[bool] = False,
-        shadow_depth: Optional[int] = 4,
-        shadow_num_neighbors: Optional[int] = 50,
-        cluster_num_parts: Optional[int] = 30,
     ) -> None:
         super().__init__()
         self.sampler = sampler
