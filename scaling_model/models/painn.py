@@ -89,6 +89,11 @@ class PaiNNMessageBlock(nn.Module):
             dim=0, index=idx_i, source=phi_W_ss
         )  # [num_nodes, num_features]
 
+        # FARLIG KODE
+        index_counts = torch.bincount(idx_i).float() 
+        idx_cnt = index_counts.unsqueeze(-1).expand_as(scalar_residuals)
+        scalar_residuals = scalar_residuals/idx_cnt
+
         # Compute vector residuals
         vector_residuals = torch.zeros_like(
             vector_features

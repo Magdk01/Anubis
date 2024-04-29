@@ -5,10 +5,7 @@ import pandas as pd
 from typing import Optional, Tuple, Union
 from pytorch_lightning import callbacks
 from torchmetrics import MetricCollection, MeanSquaredError, MeanAbsoluteError
-from pytorch_lightning.callbacks import Callback
-import matplotlib.pyplot as plt
-import numpy as np
-import wandb
+
 
 class SinusoidalRBFLayer(nn.Module):
     """
@@ -730,54 +727,3 @@ class PredictionWriter(callbacks.BasePredictionWriter):
         # Add one-hot encoding to indicate data split
         df = df.join(pd.get_dummies(self.split, dtype=float))
         df.to_csv(f"{trainer.logger.save_dir}/predictions.csv", index=False)
-
-from pytorch_lightning.loggers import WandbLogger 
-class PlottingCallback(Callback):
-    def __init__(self, plot_interval=1):
-        self.plot_interval = plot_interval
-    
-    def on_epoch_end(self, trainer, pl_module):
-        epoch = trainer.current_epoch
-        if epoch % self.plot_interval == 0:
-            df = pl_module.val_dataloader().dataset.dataframe  # make sure this is the correct way to access your dataframe
-            fig = self.result_plotter(df, epoch)
-            WandbLogger.log_image({"plot": wandb.Image(fig, caption=f"Epoch {epoch}")})
-            plt.close(fig)
-
-    def result_plotter(self, df, epoch):
-        conditions = [
-            (df['test'] == 1.0),
-            (df['train'] == 1.0),
-            (df['val'] == 1.0)
-        ]
-        choices = ['blue', 'green', 'red']  # Test: Blue, Train: Green, Val: Red
-        df['color'] = np.select(conditions, choices, default='black')
-
-        # Plotting
-        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-        colors = ['blue', 'green', 'red']
-        labels = ['Test', 'Train', 'Val']
-
-        for ax, color, label in zip(axs, colors, labels):
-            if label in ['Train', 'Val'] and epoch % 5 != 0:
-                continue  # Skip plotting Train and Val data except every 5 epochs
-            group = df[df['color'] == color]
-            ax.scatter(group['target_00'], group['pred_00'], label=f"{label} data", color=color, alpha=0.5)
-            
-            # Add regression line if there are enough data points
-            if len(group) > 1:
-                m, b = np.polyfit(group['target_00'], group['pred_00'], 1)
-                ax.plot(group['target_00'], m * group['target_00'] + b, color=color, label=f'{label} trend', linewidth=3)
-            
-            # Ideal case line
-            x_values = np.array([df['target_00'].min(), df['target_00'].max()])
-            ax.plot(x_values, x_values, linestyle='--', color='black', linewidth=3)
-            
-            ax.set_title(f'{label} Data Scatter Plot')
-            ax.set_xlabel('Targets')
-            ax.set_ylabel('Predictions')
-            ax.legend()
-            ax.grid(True)
-
-        plt.tight_layout()
-        return fig
