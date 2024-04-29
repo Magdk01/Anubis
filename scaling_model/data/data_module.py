@@ -5,50 +5,10 @@ from torch.utils.data import DataLoader
 from torch_geometric.data import Data, Batch
 from torch_geometric.datasets import QM9
 from typing import Optional, List, Union
-from torch_geometric.loader import ShaDowKHopSampler, ClusterData, ClusterLoader
 from torch_geometric.transforms import BaseTransform
 
 from scaling_model.data.utils import ProteinData
 from scaling_model.data.random_data import SyntheticData
-
-
-class shadowBatches:
-    def __init__(self, depth, num_neighbors):
-        self.depth = depth
-        self.num_neighbors = num_neighbors
-
-    def __call__(self, batch):
-        minibatches = list()
-        for graph in batch:
-            minibatches.extend(
-                ShaDowKHopSampler(
-                    graph, depth=self.depth, num_neighbors=self.num_neighbors
-                )
-            )
-
-        return Batch.from_data_list(minibatches)
-
-
-class clusterBatches:
-    def __init__(self, num_parts, data_dir):
-        self.num_parts = num_parts
-        self.data_dir = data_dir
-
-    def __call__(self, batch):
-        minibatches = list()
-        for graph in batch:
-            minibatches.extend(
-                ClusterLoader(
-                    ClusterData(
-                        graph,
-                        num_parts=self.num_parts,
-                        recursive=False,
-                        save_dir=self.data_dir,
-                    ),
-                    batch_size=1,
-                )
-            )
-        return minibatches
 
 
 class baselineBatches:
@@ -217,10 +177,6 @@ class BaselineDataModule(pl.LightningDataModule):
 
         self.random_data = random_data
         collate_dict = {
-            "shadow": shadowBatches(shadow_depth, shadow_num_neighbors),
-            "cluster": clusterBatches(
-                num_parts=cluster_num_parts, data_dir=self.data_dir
-            ),
             "baseline": baselineBatches(),
         }
         self.collate = collate_dict.get(self.sampler, baselineBatches())
