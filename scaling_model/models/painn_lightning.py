@@ -106,6 +106,14 @@ class PaiNNforQM9(pl.LightningModule):
         loss = F.mse_loss(y_hat, batch.y, reduction=reduction)
 
         self.log(
+            "Allocated Memory for Batch",
+            torch.cuda.memory_allocated(),
+            on_step=True,
+            on_epoch=False,
+            prog_bar=False,
+            logger=True,
+        )
+        self.log(
             "predictions",
             y_hat.mean(),
             on_step=True,
