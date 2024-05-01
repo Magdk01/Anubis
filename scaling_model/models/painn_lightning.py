@@ -1,3 +1,4 @@
+import time
 import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -109,7 +110,7 @@ class PaiNNforQM9(pl.LightningModule):
             "Allocated Memory for Batch",
             torch.cuda.memory_allocated(),
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
             prog_bar=False,
             logger=True,
         )
@@ -136,7 +137,16 @@ class PaiNNforQM9(pl.LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx):
+        init_time = time.time()
         loss = self._compute_loss(batch, reduction="mean")
+        self.log(
+            "Time",
+            time.time() - init_time,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+        )
         self.log(
             "train_loss",
             loss,
