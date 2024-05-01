@@ -186,12 +186,14 @@ class BaselineDataModule(pl.LightningDataModule):
         if self.random_data:
             dataset = SyntheticData(
                 root=self.data_dir,
+                sampler=self.sampler,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),
             )
         else:
             dataset = ProteinData(
                 root=self.data_dir,
+                sampler=self.sampler,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),
             )
