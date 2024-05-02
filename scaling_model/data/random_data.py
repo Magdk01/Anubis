@@ -13,6 +13,7 @@ class SyntheticData(InMemoryDataset):
     def __init__(
         self,
         root: str,
+        sampler: str = "baseline",
         max_protein_size: int = 100_000,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
@@ -23,6 +24,8 @@ class SyntheticData(InMemoryDataset):
         self.data_path = os.path.join(root, data_path)
         self.max_protein_size = max_protein_size
         self.cutoff_dist = 3.0
+        self.sampler = sampler
+        self.sampling_prob = 0.5
         super().__init__(
             root, transform, pre_transform, pre_filter, force_reload=force_reload
         )
@@ -56,13 +59,19 @@ class SyntheticData(InMemoryDataset):
 
     def process(self):
         data_list = list()
-        for i in tqdm(range(10_000)):
+        for i in tqdm(range(1_000)):
             prot_length = random.randint(a=50, b=self.max_protein_size)
             pos = torch.rand(prot_length, 3) * 30
             name = f"{prot_length}_{i}"
 
             z = torch.randint(low=1, high=9, size=(1, prot_length)).squeeze()
-            # y = torch.tensor([1 / (1 + math.exp(torch.mean(-z.float())))])
+
+            if self.sampler == "random":
+                mask = torch.rand(z.shape) < self.sampling_prob
+
+                z = z[mask]
+                pos = pos[mask]
+                prot_length = len(z)
 
             y = torch.tensor([torch.sum(z.float())])
 
@@ -79,7 +88,18 @@ class SyntheticData(InMemoryDataset):
             short_edges = rel_dist < self.cutoff_dist
             rel_dist = rel_dist[short_edges]
 
-            edge_index = torch.stack([idx_i[short_edges], idx_j[short_edges]])
+            idx_i = idx_i[short_edges]
+            idx_j = idx_j[short_edges]
+
+            edge_index = torch.stack([idx_i, idx_j])
+
+            node_idx = torch.cat((idx_i, idx_j), dim=0).unique()
+            z = z[node_idx]
+            pos = pos[node_idx]
+            prot_length = len(z)
+
+            if prot_length < 1:
+                continue
 
             data = Data(
                 z=z,

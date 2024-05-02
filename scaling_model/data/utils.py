@@ -10,10 +10,6 @@ from torch_geometric.data import Data, InMemoryDataset
 from periodictable import elements
 from tqdm import tqdm
 
-bad_ids = [
-    #    "1hje"
-]
-
 
 def check_duplicate_coordinates(coordinates):
     """
@@ -27,14 +23,12 @@ def check_duplicate_coordinates(coordinates):
         return False
 
 
-
-
-
 class ProteinData(InMemoryDataset):
 
     def __init__(
         self,
         root: str,
+        sampler: str = "baseline",
         max_protein_size: int = torch.inf,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
@@ -45,6 +39,8 @@ class ProteinData(InMemoryDataset):
         self.data_path = os.path.join(root, data_path)
         self.max_protein_size = max_protein_size
         self.cutoff_dist = 3.0
+        self.sampler = sampler
+        self.sampling_prob = 0.5
         super().__init__(
             root, transform, pre_transform, pre_filter, force_reload=force_reload
         )
@@ -76,102 +72,78 @@ class ProteinData(InMemoryDataset):
         pass
 
     def process(self):
-        chemesitry_excel = False
         target_cols = ["Alpha", "Beta"]
 
-        if chemesitry_excel:
-            pass
-            # """ df = pd.read_excel("data/raw/MonomericProteinsWithFeatures.xlsx")
-            # df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
-            #     target_cols
-            # ].std()
-            # element_translation = {el.symbol.lower(): el.number for el in elements}
-            # element_translation["d"] = 1
-            # data_list = list()
-            # for j, row in tqdm(df.iterrows(), total=len(df)):
-            #     pdb_id = row.PDB
-            #     coords = get_atomic_structure(pdb_id, self.max_protein_size)
-            #     if coords == None:
-            #         continue
+        df = pd.read_csv(
+            "data/raw/cleaned_data.csv", index_col=False
+        )
+        if "Alpha" in target_cols:
+            df = df.drop(df[df["Alpha"] == 0].index)
+            df = df.drop(df[df["Alpha"] == 100].index)
 
-            #     name = row["PDB"]
-            #     y = torch.tensor([row[col] for col in target_cols])
-            #     x = torch.tensor(
-            #         [0.0] * 11, dtype=float
-            #     )  # TODO: Figure out what this is
+        df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
+            target_cols
+        ].std()
+        element_translation = {el.symbol.lower(): el.number for el in elements}
+        element_translation["d"] = 1
+        data_list = list()
+        for j, row in tqdm(df.iterrows(), total=len(df)):
+            coords = eval(row.coords)
 
-            #     n_atoms = len(coords)
-            #     z = torch.empty((n_atoms), dtype=torch.long)
-            #     pos = torch.empty((n_atoms, 3))
-            #     for i, x in enumerate(coords):
-            #         z[i] = torch.tensor(
-            #             int(element_translation[x[0].lower()]), dtype=torch.long
-            #         ).view(-1, 1)
-            #         pos[i] = torch.tensor([x[1], x[2], x[3]])
+            name = row["PDB"]
+            y = torch.tensor([row[col] for col in target_cols])
+            x = torch.tensor([0.0] * 11, dtype=float)
 
-            #     data = Data(x=x, z=z, pos=pos, y=y.unsqueeze(0), name=name, idx=j)
-            #     data_list.append(data)
+            prot_length = len(coords)
+            if prot_length > self.max_protein_size:
+                continue
 
-            # self.save(data_list, self.processed_paths[0]) """
-            
-        else:
-            df = pd.read_csv("data/raw/cleaned_data.csv")
-            if "Alpha" in target_cols:
-                df = df.drop(df[df["Alpha"]==0].index)
-                df = df.drop(df[df["Alpha"]==100].index)
-            
-            df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
-                target_cols
-            ].std()
-            element_translation = {el.symbol.lower(): el.number for el in elements}
-            element_translation["d"] = 1
-            data_list = list()
-            for j, row in tqdm(df.iterrows(), total=len(df)):
-                coords = eval(row.coords)
+            z = torch.empty((prot_length), dtype=torch.long)
+            pos = torch.empty((prot_length, 3))
+            for i, x in enumerate(coords):
+                z[i] = torch.tensor(
+                    int(element_translation[x[0].lower()]), dtype=torch.long
+                ).view(-1, 1)
+                pos[i] = torch.tensor([x[1], x[2], x[3]])
 
-                name = row["PDB"]
-                y = torch.tensor([row[col] for col in target_cols])
-                x = torch.tensor(
-                    [0.0] * 11, dtype=float
-                )  # TODO: Figure out what this is
+            if self.sampler == "random":
+                mask = torch.rand(z.shape) < self.sampling_prob
 
-                prot_length = len(coords)
-                # if prot_length != row.atom_len:
-                #     print('hehe')
-                if prot_length>self.max_protein_size:
-                    continue
+                z = z[mask]
+                pos = pos[mask]
+                prot_length = len(z)
 
-                z = torch.empty((prot_length), dtype=torch.long)
-                pos = torch.empty((prot_length, 3))
-                for i, x in enumerate(coords):
-                    z[i] = torch.tensor(
-                        int(element_translation[x[0].lower()]), dtype=torch.long
-                    ).view(-1, 1)
-                    pos[i] = torch.tensor([x[1], x[2], x[3]])
+            adjecency_matrix = torch.ones(
+                prot_length, prot_length, dtype=int
+            ) - torch.eye(prot_length, dtype=int)
+            idx_i, idx_j = torch.block_diag(adjecency_matrix).nonzero().t()
 
-                adjecency_matrix = torch.ones(
-                    prot_length, prot_length, dtype=int
-                ) - torch.eye(prot_length, dtype=int)
-                idx_i, idx_j = torch.block_diag(adjecency_matrix).nonzero().t()
+            # Relative_positions pos_ij = pos_j - pos_i and distances
+            rel_pos = pos[idx_j] - pos[idx_i]
+            rel_dist = torch.linalg.vector_norm(rel_pos, dim=1)
 
-                # Relative_positions pos_ij = pos_j - pos_i and distances
-                rel_pos = pos[idx_j] - pos[idx_i]
-                rel_dist = torch.linalg.vector_norm(rel_pos, dim=1)
+            # Keep only edges shorter than the cutoff
+            short_edges = rel_dist < self.cutoff_dist
+            rel_dist = rel_dist[short_edges]
 
-                # Keep only edges shorter than the cutoff
-                short_edges = rel_dist < self.cutoff_dist
-                rel_dist = rel_dist[short_edges]
+            idx_i = idx_i[short_edges]
+            idx_j = idx_j[short_edges]
 
-                edge_index = torch.stack([idx_i[short_edges], idx_j[short_edges]])
+            edge_index = torch.stack([idx_i, idx_j])
 
-                data = Data(
-                    z=z,
-                    pos=pos,
-                    y=y.unsqueeze(0),
-                    name=name,
-                    idx=i,
-                    edge_index=edge_index,
-                    num_nodes=prot_length,
-                )
-                data_list.append(data)
-            self.save(data_list, self.processed_paths[0])
+            node_idx = torch.cat((idx_i, idx_j), dim=0).unique()
+            z = z[node_idx]
+            pos = pos[node_idx]
+            prot_length = len(z)
+
+            data = Data(
+                z=z,
+                pos=pos,
+                y=y.unsqueeze(0),
+                name=name,
+                idx=i,
+                edge_index=edge_index,
+                num_nodes=prot_length,
+            )
+            data_list.append(data)
+        self.save(data_list, self.processed_paths[0])

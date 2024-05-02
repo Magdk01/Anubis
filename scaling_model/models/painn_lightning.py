@@ -1,3 +1,4 @@
+import time
 import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
@@ -106,6 +107,14 @@ class PaiNNforQM9(pl.LightningModule):
         loss = F.mse_loss(y_hat, batch.y, reduction=reduction)
 
         self.log(
+            "Allocated Memory for Batch",
+            torch.cuda.memory_allocated(),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+        )
+        self.log(
             "predictions",
             y_hat.mean(),
             on_step=True,
@@ -128,7 +137,16 @@ class PaiNNforQM9(pl.LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx):
+        init_time = time.time()
         loss = self._compute_loss(batch, reduction="mean")
+        self.log(
+            "Time",
+            time.time() - init_time,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=False,
+            logger=True,
+        )
         self.log(
             "train_loss",
             loss,
