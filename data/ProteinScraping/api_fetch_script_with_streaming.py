@@ -7,7 +7,7 @@ import re
 # Define paths and file names
 source_path = "data/ProteinScraping/"
 pymol_result_file = "Pymol_results_current.txt"
-scraped_csv_path = "scraped_proteins_dataset_PDB_new_1000_streaming.csv"
+scraped_csv_path = "maybe_final_dataset_with_only_exp_data_1000_atoms_streaming_2.csv"
 
 # Setup caching with joblib
 cachedir = './joblib_cache'
@@ -61,6 +61,14 @@ def process_data_stream(input_df_path, output_path):
     # Read the input DataFrame
     df = pd.read_table(input_df_path)
     df = df.drop_duplicates()
+    with open(source_path +'PDB_ids_for_dataset.txt', 'r') as file:
+        content = file.read()
+        valid_ids = content.split(',')
+
+    filtered_df = df[df['PDB'].isin(valid_ids)]
+
+    df = filtered_df
+    
 
     # Prepare the output file
     if os.path.exists(output_path):
@@ -79,7 +87,7 @@ def process_data_stream(input_df_path, output_path):
             continue  # Skip already processed IDs
 
         coords, atom_len = get_atomic_structure(pdb_id)
-        if coords is not None and atom_len is not None and not pd.isna(row['Alpha']) and not pd.isna(row['Salt bridges']) and not pd.isna(row['H-bonds']):
+        if coords is not None and not len(coords) <=1 and atom_len is not None and not pd.isna(row['Alpha']) and not pd.isna(row['Salt bridges']) and not pd.isna(row['H-bonds']):
             row['coords'] = coords
             row['atom_len'] = atom_len
             # Append row to CSV file
