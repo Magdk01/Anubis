@@ -96,15 +96,27 @@ class SyntheticData(InMemoryDataset):
             z = z[node_idx]
             pos = pos[node_idx]
 
-            if self.sampler == "random":
-                mask = torch.rand(z.shape) < self.sampling_prob
+            if self.sampler == "baseline":
+                prot_length = len(z)
+
+            elif self.sampler == "random":
+                mask = torch.rand(z.shape) > self.sampling_prob
 
                 z = z[mask]
                 pos = pos[mask]
                 prot_length = len(z)
 
-            if self.sampler == "density":
-                torch.bincount(idx_i)
+            elif self.sampler == "density":
+                idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
+                edge_counts = torch.bincount(idx_i)
+                sampling_quantile = torch.quantile(
+                    edge_counts.type(torch.float), self.sampling_prob
+                )
+                mask = edge_counts > sampling_quantile
+
+                z = z[mask]
+                pos = pos[mask]
+                prot_length = len(z)
 
             idx_i, idx_j = get_edge_index(prot_length, pos, self.cutoff_dist)
 
