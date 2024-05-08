@@ -56,7 +56,7 @@ class PaiNNforQM9(pl.LightningModule):
             ),
             torch.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
         )
-
+        self.init_time = time.time()
         self.save_hyperparameters()
 
     def forward(self, atoms, atom_positions, graph_indexes):
@@ -107,12 +107,14 @@ class PaiNNforQM9(pl.LightningModule):
         loss = F.mse_loss(y_hat, batch.y, reduction=reduction)
 
         self.log(
-            "Allocated Memory for Batch",
+            "Allocated Memory",
             torch.cuda.memory_allocated(),
             on_step=True,
             on_epoch=True,
             prog_bar=False,
             logger=True,
+            reduce_fx=torch.sum,
+            batch_size=batch.y.shape[0],
         )
         self.log(
             "predictions",
@@ -137,15 +139,16 @@ class PaiNNforQM9(pl.LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx):
-        init_time = time.time()
         loss = self._compute_loss(batch, reduction="mean")
         self.log(
             "Time",
-            time.time() - init_time,
+            time.time() - self.init_time,
             on_step=True,
             on_epoch=True,
             prog_bar=False,
             logger=True,
+            reduce_fx=torch.sum,
+            batch_size=batch.y.shape[0],
         )
         self.log(
             "train_loss",
