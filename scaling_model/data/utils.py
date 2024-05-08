@@ -75,7 +75,7 @@ class ProteinData(InMemoryDataset):
         target_cols = ["Alpha", "Beta"]
 
         df = pd.read_csv(
-            "data/raw/scraped_proteins_dataset_PDB_new_1000.csv", index_col=False
+            "data/raw/cleaned_data.csv", index_col=False
         )
         if "Alpha" in target_cols:
             df = df.drop(df[df["Alpha"] == 0].index)

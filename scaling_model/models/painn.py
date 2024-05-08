@@ -101,9 +101,14 @@ class PaiNNMessageBlock(nn.Module):
         vector_residuals_per_edge = vector_features[  # [num_edges, num_features, 3]
             idx_j
         ] * phi_W_vv.unsqueeze(-1) + phi_W_vs.unsqueeze(-1) * rel_dir.unsqueeze(-2)
+
         vector_residuals.index_add_(  # [num_nodes, num_features, 3]
             dim=0, index=idx_i, source=vector_residuals_per_edge
         )
+
+        #Aggregation for sum_j over Vector features. Verify wheter the counter should be over i or j
+        vec_cnt = torch.concat([idx_cnt.unsqueeze(-1)]*3,axis=2)
+        vector_residuals = vector_residuals/vec_cnt
 
         scalar_features = (
             scalar_features + scalar_residuals
