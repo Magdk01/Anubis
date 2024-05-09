@@ -144,11 +144,9 @@ class PaiNNforQM9(pl.LightningModule):
             "Time",
             time.time() - self.init_time,
             on_step=True,
-            on_epoch=True,
+            on_epoch=False,
             prog_bar=False,
             logger=True,
-            reduce_fx=torch.sum,
-            batch_size=batch.y.shape[0],
         )
         self.log(
             "train_loss",
