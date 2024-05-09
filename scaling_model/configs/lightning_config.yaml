@@ -7,21 +7,15 @@ sampler:
 
 data:
   target: 0
-<<<<<<< HEAD
-  data_dir: scraped_data_1000_new_5_${sampler}/
+  data_dir: scraped_data_1000_new_5_${sampler.sampler_type}/
   max_protein_size: 1000
   batch_size_train: 4
-=======
-  data_dir: data_300/
-  max_protein_size: 10000
-  batch_size_train: 2
->>>>>>> f520e3cde18163bb4cea1f7ded846fa460b46a16
   batch_size_inference: 1
-  num_workers: 11
+  num_workers: 4
   splits: [0.8, 0.1, 0.1]
   seed: ${seed}
   subset_size: null
-  random_data: false
+  random_data: False
 
 
 lightning_model:
@@ -60,23 +54,13 @@ model_checkpoint:
     mode: min
 
 trainer:
-<<<<<<< HEAD
   max_epochs: 10
   max_time: 00:08:00:00
-=======
-  max_epochs: 1
-  max_time: 02:23:30:00
->>>>>>> f520e3cde18163bb4cea1f7ded846fa460b46a16
   deterministic: true
 
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
-<<<<<<< HEAD
   project: HPC_benchmarks
   name: mvin_${experiment}_batch_${data.batch_size_train}_layers_${lightning_model.painn_kwargs.num_message_passing_layers}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
-=======
-  project: debugging
-  name: ehaa_sampling_experiments_time_${now:%Y-%m-%d_%H-%M-%S}
->>>>>>> f520e3cde18163bb4cea1f7ded846fa460b46a16
   entity: anubis
   dir: /zhome/16/a/167936/Desktop/Bachelor/Anubis
