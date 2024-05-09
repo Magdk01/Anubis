@@ -1,12 +1,12 @@
 seed: 42069420
-experiment: HPC_ debugging_runs_for_mean_agr
+experiment: new_dataset_aggr_fixed_1000_atoms_we_go_agane
 
 sampler: baseline
 
 data:
   target: 0
-  data_dir: scraped_data_500/
-  max_protein_size: 500
+  data_dir: scraped_data_1000_new_5_${sampler}/
+  max_protein_size: 1000
   batch_size_train: 4
   batch_size_inference: 1
   num_workers: 4
@@ -53,12 +53,12 @@ model_checkpoint:
 
 trainer:
   max_epochs: 10
-  max_time: 02:23:30:00
+  max_time: 00:08:00:00
   deterministic: true
 
 logger:
   save_dir: logs/${now:%Y-%m-%d_%H-%M-%S}
-  project: HPC_test
-  name: mvin_${experiment}_random_data_${data.random_data}_time_${now:%Y-%m-%d_%H-%M-%S}
+  project: HPC_benchmarks
+  name: mvin_${experiment}_batch_${data.batch_size_train}_layers_${lightning_model.painn_kwargs.num_message_passing_layers}_sampler_${sampler}_time_${now:%Y-%m-%d_%H-%M-%S}
   entity: anubis
   dir: /zhome/16/a/167936/Desktop/Bachelor/Anubis
