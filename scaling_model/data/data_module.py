@@ -142,7 +142,8 @@ class BaselineDataModule(pl.LightningDataModule):
 
     def __init__(
         self,
-        sampler: str = "baseline",
+        sampler_type: str = "baseline",
+        sampling_prob: float = 0.5,
         target: int = 0,
         data_dir: str = "data/",
         batch_size_train: int = 32,
@@ -154,9 +155,11 @@ class BaselineDataModule(pl.LightningDataModule):
         subset_size: Optional[int] = None,
         download: Optional[bool] = False,
         random_data: Optional[bool] = False,
+        cutoff: float = 5.0,
     ) -> None:
         super().__init__()
-        self.sampler = sampler
+        self.sampler = sampler_type
+        self.sampling_prob = sampling_prob
         self.target = target
         self.data_dir = data_dir
         self.batch_size_train = batch_size_train
@@ -167,6 +170,7 @@ class BaselineDataModule(pl.LightningDataModule):
         self.seed = seed
         self.subset_size = subset_size
         self.download = download
+        self.cutoff = cutoff
 
         self.data_train = None
         self.data_val = None
@@ -187,15 +191,19 @@ class BaselineDataModule(pl.LightningDataModule):
             dataset = SyntheticData(
                 root=self.data_dir,
                 sampler=self.sampler,
+                sampling_prob=self.sampling_prob,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),
+                cutoff=self.cutoff,
             )
         else:
             dataset = ProteinData(
                 root=self.data_dir,
                 sampler=self.sampler,
+                sampling_prob=self.sampling_prob,
                 max_protein_size=self.max_protein_size,
                 transform=GetTarget(self.target),
+                cutoff=self.cutoff,
             )
 
         # Shuffle dataset

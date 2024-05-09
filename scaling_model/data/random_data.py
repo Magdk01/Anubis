@@ -8,24 +8,46 @@ from typing import Callable, List, Optional
 from torch_geometric.data import Data, InMemoryDataset
 
 
+def get_edge_index(prot_length, pos, cutoff):
+    adjecency_matrix = torch.ones(prot_length, prot_length, dtype=int) - torch.eye(
+        prot_length, dtype=int
+    )
+    idx_i, idx_j = torch.block_diag(adjecency_matrix).nonzero().t()
+
+    # Relative_positions pos_ij = pos_j - pos_i and distances
+    rel_pos = pos[idx_j] - pos[idx_i]
+    rel_dist = torch.linalg.vector_norm(rel_pos, dim=1)
+
+    # Keep only edges shorter than the cutoff
+    short_edges = rel_dist < cutoff
+    rel_dist = rel_dist[short_edges]
+
+    idx_i = idx_i[short_edges]
+    idx_j = idx_j[short_edges]
+
+    return idx_i, idx_j
+
+
 class SyntheticData(InMemoryDataset):
 
     def __init__(
         self,
         root: str,
         sampler: str = "baseline",
+        sampling_prob: float = 0.5,
         max_protein_size: int = 100_000,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
         pre_filter: Optional[Callable] = None,
         force_reload: bool = False,
         data_path: str = "raw",
+        cutoff: float = 5.0,
     ) -> None:
         self.data_path = os.path.join(root, data_path)
         self.max_protein_size = max_protein_size
-        self.cutoff_dist = 3.0
+        self.cutoff_dist = cutoff
         self.sampler = sampler
-        self.sampling_prob = 0.5
+        self.sampling_prob = sampling_prob
         super().__init__(
             root, transform, pre_transform, pre_filter, force_reload=force_reload
         )
@@ -66,39 +88,43 @@ class SyntheticData(InMemoryDataset):
 
             z = torch.randint(low=1, high=9, size=(1, prot_length)).squeeze()
 
-            if self.sampler == "random":
-                mask = torch.rand(z.shape) < self.sampling_prob
+            y = torch.tensor([torch.sum(z.float())])
+
+            idx_i, idx_j = get_edge_index(prot_length, pos, self.cutoff_dist)
+
+            node_idx = torch.cat((idx_i, idx_j), dim=0).unique()
+            z = z[node_idx]
+            pos = pos[node_idx]
+
+            if self.sampler == "baseline":
+                prot_length = len(z)
+
+            elif self.sampler == "random":
+                mask = torch.rand(z.shape) > self.sampling_prob
 
                 z = z[mask]
                 pos = pos[mask]
                 prot_length = len(z)
 
-            y = torch.tensor([torch.sum(z.float())])
+            elif self.sampler == "density":
+                idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
+                edge_counts = torch.bincount(idx_i)
+                sampling_quantile = torch.quantile(
+                    edge_counts.type(torch.float), self.sampling_prob
+                )
+                mask = edge_counts > sampling_quantile
 
-            adjecency_matrix = torch.ones(
-                prot_length, prot_length, dtype=int
-            ) - torch.eye(prot_length, dtype=int)
-            idx_i, idx_j = torch.block_diag(adjecency_matrix).nonzero().t()
+                z = z[mask]
+                pos = pos[mask]
+                prot_length = len(z)
 
-            # Relative_positions pos_ij = pos_j - pos_i and distances
-            rel_pos = pos[idx_j] - pos[idx_i]
-            rel_dist = torch.linalg.vector_norm(rel_pos, dim=1)
-
-            # Keep only edges shorter than the cutoff
-            short_edges = rel_dist < self.cutoff_dist
-            rel_dist = rel_dist[short_edges]
-
-            idx_i = idx_i[short_edges]
-            idx_j = idx_j[short_edges]
-
-            edge_index = torch.stack([idx_i, idx_j])
+            idx_i, idx_j = get_edge_index(prot_length, pos, self.cutoff_dist)
 
             node_idx = torch.cat((idx_i, idx_j), dim=0).unique()
             z = z[node_idx]
             pos = pos[node_idx]
-            prot_length = len(z)
 
-            if prot_length < 1:
+            if len(z) < 1:
                 continue
 
             data = Data(
@@ -107,8 +133,6 @@ class SyntheticData(InMemoryDataset):
                 y=y.unsqueeze(0),
                 name=name,
                 idx=i,
-                edge_index=edge_index,
-                num_nodes=prot_length,
             )
             data_list.append(data)
 

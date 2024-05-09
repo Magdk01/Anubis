@@ -40,7 +40,9 @@ def main(cfg):
         callbacks.ModelCheckpoint(**cfg.model_checkpoint),
         PredictionWriter(dataloaders=["train", "val", "test"]),
     ]
-    dm = BaselineDataModule(sampler=cfg.sampler, **cfg.data)
+    dm = BaselineDataModule(
+        **cfg.sampler, **cfg.data, cutoff=cfg.lightning_model.painn_kwargs.cutoff_dist
+    )
     model = PaiNNforQM9(**cfg.lightning_model)
     trainer = Trainer(
         callbacks=cb,
