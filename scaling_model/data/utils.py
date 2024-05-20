@@ -94,15 +94,12 @@ class ProteinData(InMemoryDataset):
         pass
 
     def process(self):
-        target_cols = ["Alpha", "Beta"]
+        target_cols = ["Alpha"]
 
         df = pd.read_csv(
-            "data/raw/maybe_final_dataset_with_only_exp_data_1000_atoms_streaming_5.csv",
+            "data/raw/normalized_alpha_dataset_7.csv",
             index_col=False,
         )
-        if "Alpha" in target_cols:
-            df = df.drop(df[df["Alpha"] == 0].index)
-            df = df.drop(df[df["Alpha"] == 100].index)
 
         df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
             target_cols
@@ -148,10 +145,9 @@ class ProteinData(InMemoryDataset):
             if self.sampler == "density":
                 idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
                 edge_counts = torch.bincount(idx_i)
-                sampling_quantile = torch.quantile(
-                    edge_counts.type(torch.float), self.sampling_prob
-                )
-                mask = edge_counts > sampling_quantile
+                _, idxs = edge_counts.sort(descending=True)
+                collect_idxs = idxs[: int(len(idxs) * self.sampling_prob)]
+                mask = [i in collect_idxs for i in range(len(edge_counts))]
 
                 z = z[mask]
                 pos = pos[mask]
@@ -160,10 +156,9 @@ class ProteinData(InMemoryDataset):
             if self.sampler == "reverse":
                 idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
                 edge_counts = torch.bincount(idx_i)
-                sampling_quantile = torch.quantile(
-                    edge_counts.type(torch.float), self.sampling_prob
-                )
-                mask = edge_counts < sampling_quantile
+                _, idxs = edge_counts.sort(descending=False)
+                collect_idxs = idxs[: int(len(idxs) * self.sampling_prob)]
+                mask = [i in collect_idxs for i in range(len(edge_counts))]
 
                 z = z[mask]
                 pos = pos[mask]
