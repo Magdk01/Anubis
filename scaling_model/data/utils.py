@@ -97,13 +97,14 @@ class ProteinData(InMemoryDataset):
         target_cols = ["Alpha"]
 
         df = pd.read_csv(
-            "data/raw/normalized_alpha_dataset_7.csv",
+            "data/raw/manual_scrape.csv",
             index_col=False,
         )
 
         df[target_cols] = (df[target_cols] - df[target_cols].mean()) / df[
             target_cols
         ].std()
+
         element_translation = {el.symbol.lower(): el.number for el in elements}
         element_translation["d"] = 1
         data_list = list()
@@ -136,6 +137,7 @@ class ProteinData(InMemoryDataset):
                 prot_length = len(z)
 
             if self.sampler == "random":
+                torch.manual_seed(42)
                 mask = torch.rand(z.shape) < self.sampling_prob
 
                 z = z[mask]
@@ -143,6 +145,7 @@ class ProteinData(InMemoryDataset):
                 prot_length = len(z)
 
             if self.sampler == "density":
+                torch.manual_seed(42)
                 idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
                 edge_counts = torch.bincount(idx_i)
                 _, idxs = edge_counts.sort(descending=True)
@@ -154,6 +157,7 @@ class ProteinData(InMemoryDataset):
                 prot_length = len(z)
 
             if self.sampler == "reverse":
+                torch.manual_seed(42)
                 idx_i, idx_j = get_edge_index(len(z), pos, self.cutoff_dist)
                 edge_counts = torch.bincount(idx_i)
                 _, idxs = edge_counts.sort(descending=False)

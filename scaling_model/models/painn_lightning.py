@@ -105,7 +105,9 @@ class PaiNNforQM9(pl.LightningModule):
         }
         y_hat = self(**input_)
         loss = F.mse_loss(y_hat, batch.y, reduction=reduction)
-
+        if loss.max().item()>2000:
+            print(loss)
+            print(batch.name)
         self.log(
             "Allocated Memory",
             torch.cuda.memory_allocated(),
@@ -168,7 +170,7 @@ class PaiNNforQM9(pl.LightningModule):
         eval_stats = getattr(self, f"{stage}_stats")
         eval_stats["num_samples"].append(loss.shape[0])
         eval_stats["loss"].append(loss.sum())
-
+        debug = True
     def validation_step(self, batch, batch_idx):
         self._shared_eval_step(batch, stage="val")
 
